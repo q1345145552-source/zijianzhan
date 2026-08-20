@@ -1,0 +1,11 @@
+.wc-block-components-product-badge {
+	@include font-x-small-locked;
+	display: inline-block;
+	background: color-mix(in srgb, currentColor 10%, transparent);
+	padding: 2px 4px;
+	white-space: nowrap;
+
+	&[hidden] {
+		display: none;
+	}
+}

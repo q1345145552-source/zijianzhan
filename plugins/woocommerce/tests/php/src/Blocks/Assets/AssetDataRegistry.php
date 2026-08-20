@@ -1,0 +1,192 @@
+<?php
+
+namespace Automattic\WooCommerce\Tests\Blocks\Assets;
+
+use Automattic\WooCommerce\Blocks\Assets\Api;
+use Automattic\WooCommerce\Internal\Features\FeaturesController;
+use Automattic\WooCommerce\Tests\Blocks\Mocks\AssetDataRegistryMock;
+use Automattic\WooCommerce\Blocks\Package;
+use InvalidArgumentException;
+
+/**
+ * Tests for the AssetDataRegistry class.
+ *
+ * @since $VID:$
+ */
+class AssetDataRegistry extends \WP_UnitTestCase {
+	private $registry;
+
+	protected function setUp(): void {
+		parent::setUp();
+
+		$this->registry = new AssetDataRegistryMock(
+			Package::container()->get( API::class )
+		);
+	}
+
+	public function test_initial_data() {
+		$this->assertEmpty( $this->registry->get() );
+	}
+
+	/**
+	 * @testdox Currency data decodes HTML entities in the price separators.
+	 */
+	public function test_currency_data_decodes_separator_entities() {
+		update_option( 'woocommerce_price_thousand_sep', '&nbsp;' );
+		update_option( 'woocommerce_price_decimal_sep', '&#44;' );
+
+		$method = new \ReflectionMethod( $this->registry, 'get_currency_data' );
+		$method->setAccessible( true );
+		$currency_data = $method->invoke( $this->registry );
+
+		$this->assertSame( "\u{00A0}", $currency_data['thousandSeparator'] );
+		$this->assertSame( ',', $currency_data['decimalSeparator'] );
+	}
+
+	public function test_add_data() {
+		$this->registry->add( 'test', 'foo' );
+		$this->assertEquals( [ 'test' => 'foo' ], $this->registry->get() );
+	}
+
+	/**
+	 * @testdox Deprecated key check argument triggers deprecation notice for explicit values.
+	 *
+	 * @dataProvider deprecated_key_check_argument_values
+	 *
+	 * @param bool $check_key_exists Deprecated key check argument value.
+	 */
+	public function test_add_data_with_deprecated_key_check_argument_triggers_deprecation( $check_key_exists ) {
+		$this->setExpectedDeprecated( 'Automattic\WooCommerce\Blocks\Assets\AssetDataRegistry::add()' );
+
+		$this->registry->add( 'test', 'foo', $check_key_exists );
+
+		$this->assertEquals( [ 'test' => 'foo' ], $this->registry->get() );
+	}
+
+	/**
+	 * Provides explicit deprecated key check argument values.
+	 *
+	 * @return array[]
+	 */
+	public function deprecated_key_check_argument_values() {
+		return [
+			'true'  => [ true ],
+			'false' => [ false ],
+		];
+	}
+
+	public function test_data_exists() {
+		$this->registry->add( 'foo', 'lorem-ipsum' );
+		$this->assertEquals( true, $this->registry->exists( 'foo' ) );
+		$this->assertEquals( false, $this->registry->exists( 'bar' ) );
+	}
+
+	public function test_add_lazy_data() {
+		$lazy = function () {
+			return 'bar';
+		};
+		$this->registry->add( 'foo', $lazy );
+		// should not be in data yet
+		$this->assertEmpty( $this->registry->get() );
+		$this->registry->execute_lazy_data();
+		// should be in data now
+		$this->assertEquals( [ 'foo' => 'bar' ], $this->registry->get() );
+	}
+
+	public function test_invalid_key_on_adding_data() {
+		$this->setExpectedException( 'PHPUnit_Framework_Error_Warning' );
+		$this->registry->add( [ 'some_value' ], 'foo' );
+	}
+
+	/**
+	 * @testdox Hydrating data does not trigger deprecation notice when key check argument is omitted.
+	 */
+	public function test_hydrate_data_from_api_request_without_key_check_argument_does_not_trigger_deprecation() {
+		$this->registry->hydrate_data_from_api_request( 'test', '/wc/store/v1/test' );
+
+		$this->assertEmpty( $this->registry->get() );
+	}
+
+	/**
+	 * @testdox Hydrating data with deprecated key check argument triggers deprecation notice.
+	 */
+	public function test_hydrate_data_from_api_request_with_deprecated_key_check_argument_triggers_deprecation() {
+		$this->setExpectedDeprecated( 'Automattic\WooCommerce\Blocks\Assets\AssetDataRegistry::hydrate_data_from_api_request()' );
+
+		$this->registry->hydrate_data_from_api_request( 'test', '/wc/store/v1/test', false );
+
+		$this->assertEmpty( $this->registry->get() );
+	}
+
+	/**
+	 * This tests the 'woocommerce_shared_settings' filter.
+	 */
+	public function test_woocommerce_filter_with_protected_data() {
+		$this->registry->initialize_core_data();
+		$original_data = $this->registry->get();
+		add_filter( 'woocommerce_shared_settings', [ self::class, 'pdatcallback' ] );
+		$data = $this->registry->get();
+		$this->registry->initialize_core_data();
+		$this->assertEquals( $original_data, $data );
+		remove_filter( 'woocommerce_shared_settings', [ self::class, 'pdatcallback' ] );
+	}
+
+	public static function pdatcallback( $existing_data ) {
+		$existing_data['locale']['siteLocale'] = 'cheeseburger';
+		return $existing_data;
+	}
+
+	public static function ndcallback( $existing_data ) {
+		$existing_data['cheeseburger'] = 'fries';
+		return $existing_data;
+	}
+
+	public function test_woocommerce_filter_with_new_data() {
+		$this->registry->initialize_core_data();
+		$original_data = $this->registry->get();
+		add_filter( 'woocommerce_shared_settings', [ self::class, 'ndcallback' ] );
+		$this->registry->initialize_core_data();
+		$data = $this->registry->get();
+		$original_data['cheeseburger'] = 'fries';
+		$this->assertEquals( $original_data, $data );
+		remove_filter( 'woocommerce_shared_settings', [ self::class, 'ndcallback' ] );
+	}
+
+	/**
+	 * @testdox `experimentalCartSaveForLater` is registered as true when the `cart_save_for_later` feature is enabled.
+	 */
+	public function test_experimental_cart_save_for_later_setting_is_true_when_feature_enabled() {
+		$features_controller = wc_get_container()->get( FeaturesController::class );
+		$original_enabled    = $features_controller->feature_is_enabled( 'cart_save_for_later' );
+
+		$features_controller->change_feature_enable( 'cart_save_for_later', true );
+		try {
+			$this->registry->initialize_core_data();
+			$data = $this->registry->get();
+
+			$this->assertArrayHasKey( 'experimentalCartSaveForLater', $data );
+			$this->assertTrue( $data['experimentalCartSaveForLater'] );
+		} finally {
+			$features_controller->change_feature_enable( 'cart_save_for_later', $original_enabled );
+		}
+	}
+
+	/**
+	 * @testdox `experimentalCartSaveForLater` is registered as false when the `cart_save_for_later` feature is disabled.
+	 */
+	public function test_experimental_cart_save_for_later_setting_is_false_when_feature_disabled() {
+		$features_controller = wc_get_container()->get( FeaturesController::class );
+		$original_enabled    = $features_controller->feature_is_enabled( 'cart_save_for_later' );
+
+		$features_controller->change_feature_enable( 'cart_save_for_later', false );
+		try {
+			$this->registry->initialize_core_data();
+			$data = $this->registry->get();
+
+			$this->assertArrayHasKey( 'experimentalCartSaveForLater', $data );
+			$this->assertFalse( $data['experimentalCartSaveForLater'] );
+		} finally {
+			$features_controller->change_feature_enable( 'cart_save_for_later', $original_enabled );
+		}
+	}
+}

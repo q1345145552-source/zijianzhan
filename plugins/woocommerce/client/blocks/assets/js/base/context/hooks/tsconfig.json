@@ -1,0 +1,17 @@
+{
+	"extends": "../../../../../tsconfig.base.json",
+	"compilerOptions": {},
+	"include": [
+		".",
+		"../../../../../packages/public-api/blocks-checkout-events/*",
+		"../../../../../packages/public-api/blocks-checkout/index.js",
+		"../../../../../packages/public-api/price-format/index.js",
+		"../providers/cart-checkout/checkout-events/index.tsx",
+		"../providers/cart-checkout/payment-events/index.tsx",
+		"../providers/cart-checkout/shipping/index.js",
+		"../../components/cart-checkout/totals/shipping",
+		"../../../editor-components/utils/*",
+		"../../../data/**/*"
+	],
+	"exclude": [ "**/test/**" ]
+}

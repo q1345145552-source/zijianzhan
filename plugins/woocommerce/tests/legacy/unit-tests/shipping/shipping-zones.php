@@ -1,0 +1,199 @@
+<?php
+/**
+ * Tests for the WC_Shopping_Zones class.
+ *
+ * @package WooCommerce\Tests\Shipping
+ */
+
+/**
+ * Class Shipping_Zones.
+ * @package WooCommerce\Tests\Shipping
+ */
+class WC_Tests_Shipping_Zones extends WC_Unit_Test_Case {
+
+	/**
+	 * Shipping zone fixture IDs keyed by fixture name.
+	 *
+	 * @var int[]
+	 */
+	private $zone_ids;
+
+	/**
+	 * Set up tests.
+	 */
+	public function setUp(): void {
+		parent::setUp();
+
+		$this->zone_ids = WC_Helper_Shipping_Zones::create_mock_zones();
+	}
+
+	/**
+	 * Test: WC_Shipping_Zones::get_zones
+	 */
+	public function test_get_zones() {
+		// Test.
+		$zones = WC_Shipping_Zones::get_zones();
+
+		// Assert.
+		$this->assertTrue( is_array( $zones ) );
+		$this->assertTrue( 4 === count( $zones ) );
+	}
+
+	/**
+	 * Test: WC_Shipping_Zones::get_zone
+	 */
+	public function test_get_zone() {
+		// Test.
+		$zone = WC_Shipping_Zones::get_zone( $this->zone_ids['local'] );
+
+		// Assert that the first zone is our local zone.
+		$this->assertInstanceOf( 'WC_Shipping_Zone', $zone );
+		$this->assertEquals( $zone->get_zone_name(), 'Local' );
+	}
+
+	/**
+	 * Test: WC_Shipping_Zones::get_zone_by
+	 */
+	public function test_get_zone_by() {
+		// Test.
+		$zone = WC_Shipping_Zones::get_zone_by( 'zone_id', $this->zone_ids['europe'] );
+
+		// Assert.
+		$this->assertInstanceOf( 'WC_Shipping_Zone', $zone );
+		$this->assertEquals( $zone->get_zone_name(), 'Europe' );
+
+		// Test instance_id.
+		$instance_id = $zone->add_shipping_method( 'flat_rate' );
+
+		$zone = WC_Shipping_Zones::get_zone_by( 'instance_id', $instance_id );
+
+		// Assert.
+		$this->assertInstanceOf( 'WC_Shipping_Zone', $zone );
+		$this->assertEquals( $zone->get_zone_name(), 'Europe' );
+	}
+
+	/**
+	 * Test: WC_Shipping_Zones::get_shipping_method
+	 */
+	public function test_get_shipping_method() {
+		// Test.
+		$zone            = WC_Shipping_Zones::get_zone_by( 'zone_id', $this->zone_ids['local'] );
+		$instance_id     = $zone->add_shipping_method( 'flat_rate' );
+		$shipping_method = WC_Shipping_Zones::get_shipping_method( $instance_id );
+
+		// Assert.
+		$this->assertInstanceOf( 'WC_Shipping_Flat_Rate', $shipping_method );
+	}
+
+	/**
+	 * Test: WC_Shipping_Zones::get_shipping_method loads enabled and method_order from database
+	 */
+	public function test_get_shipping_method_loads_enabled_and_order() {
+		$zone        = WC_Shipping_Zones::get_zone_by( 'zone_id', $this->zone_ids['local'] );
+		$instance_id = $zone->add_shipping_method( 'flat_rate' );
+
+		// Set enabled to false and order to 5 in database.
+		global $wpdb;
+		$wpdb->update(
+			$wpdb->prefix . 'woocommerce_shipping_zone_methods',
+			array(
+				'is_enabled'   => 0,
+				'method_order' => 5,
+			),
+			array( 'instance_id' => $instance_id ),
+			array( '%d', '%d' ),
+			array( '%d' )
+		);
+
+		// Fetch the shipping method.
+		$shipping_method = WC_Shipping_Zones::get_shipping_method( $instance_id );
+
+		// Assert enabled is correctly loaded as 'no' from database.
+		$this->assertEquals( 'no', $shipping_method->enabled, 'Enabled property should be loaded from database' );
+
+		// Assert method_order is correctly loaded.
+		$this->assertEquals( 5, $shipping_method->method_order, 'Method order should be loaded from database' );
+
+		// Now set enabled to true and order to 3.
+		$wpdb->update(
+			$wpdb->prefix . 'woocommerce_shipping_zone_methods',
+			array(
+				'is_enabled'   => 1,
+				'method_order' => 3,
+			),
+			array( 'instance_id' => $instance_id ),
+			array( '%d', '%d' ),
+			array( '%d' )
+		);
+
+		// Fetch again.
+		$shipping_method = WC_Shipping_Zones::get_shipping_method( $instance_id );
+
+		// Assert enabled is correctly loaded as 'yes' from database.
+		$this->assertEquals( 'yes', $shipping_method->enabled, 'Enabled property should reflect database state' );
+
+		// Assert method_order is correctly loaded.
+		$this->assertEquals( 3, $shipping_method->method_order, 'Method order should reflect database state' );
+	}
+
+	/**
+	 * Test: WC_Shipping_Zones::delete_zone
+	 */
+	public function test_delete_zone() {
+		// Test.
+		WC_Shipping_Zones::delete_zone( $this->zone_ids['local'] );
+		$zones = WC_Shipping_Zones::get_zones();
+
+		// Assert.
+		$this->assertTrue( 3 === count( $zones ) );
+	}
+
+	/**
+	 * Test: WC_Shipping_Zones::get_zone_matching_package
+	 */
+	public function test_get_zone_matching_package() {
+		// Test.
+		$zone1 = WC_Shipping_Zones::get_zone_matching_package(
+			array(
+				'destination' => array(
+					'country'  => 'GB',
+					'state'    => 'Cambs',
+					'postcode' => 'CB23 1GG',
+				),
+			)
+		);
+		$zone2 = WC_Shipping_Zones::get_zone_matching_package(
+			array(
+				'destination' => array(
+					'country'  => 'GB',
+					'state'    => 'Cambs',
+					'postcode' => 'PE12 1BG',
+				),
+			)
+		);
+		$zone3 = WC_Shipping_Zones::get_zone_matching_package(
+			array(
+				'destination' => array(
+					'country'  => 'US',
+					'state'    => 'CA',
+					'postcode' => '90210',
+				),
+			)
+		);
+		$zone4 = WC_Shipping_Zones::get_zone_matching_package(
+			array(
+				'destination' => array(
+					'country'  => 'US',
+					'state'    => 'AL',
+					'postcode' => '12345',
+				),
+			)
+		);
+
+		// Assert.
+		$this->assertEquals( 'Local', $zone1->get_zone_name() );
+		$this->assertEquals( 'Europe', $zone2->get_zone_name() );
+		$this->assertEquals( 'California', $zone3->get_zone_name() );
+		$this->assertEquals( 'US', $zone4->get_zone_name() );
+	}
+}

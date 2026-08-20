@@ -1,0 +1,718 @@
+/**
+ * External dependencies
+ */
+import { makeRe } from 'minimatch';
+
+/**
+ * Internal dependencies
+ */
+import { JobType, parseCIConfig, testTypes } from '../config';
+
+describe( 'Config', () => {
+	describe( 'parseCIConfig', () => {
+		it( 'should parse empty config', () => {
+			const parsed = parseCIConfig( { name: 'foo', config: {} } );
+
+			expect( parsed ).toMatchObject( {} );
+		} );
+
+		it( 'should parse lint config', () => {
+			const parsed = parseCIConfig( {
+				name: 'foo',
+				config: {
+					ci: {
+						lint: {
+							changes: '/src/**/*.{js,jsx,ts,tsx}',
+							command: 'foo',
+						},
+					},
+				},
+			} );
+
+			expect( parsed ).toMatchObject( {
+				jobs: [
+					{
+						type: JobType.Lint,
+						changes: [
+							/^package\.json$/,
+							makeRe( '/src/**/*.{js,jsx,ts,tsx}' ),
+						],
+						command: 'foo',
+					},
+				],
+			} );
+		} );
+
+		it( 'should validate lint command vars', () => {
+			const parsed = parseCIConfig( {
+				name: 'foo',
+				config: {
+					ci: {
+						lint: {
+							changes: '/src/**/*.{js,jsx,ts,tsx}',
+							command: 'foo <baseRef>',
+						},
+					},
+				},
+			} );
+
+			expect( parsed ).toMatchObject( {
+				jobs: [
+					{
+						type: JobType.Lint,
+						changes: [
+							/^package\.json$/,
+							makeRe( '/src/**/*.{js,jsx,ts,tsx}' ),
+						],
+						command: 'foo <baseRef>',
+					},
+				],
+			} );
+
+			const expectation = () => {
+				parseCIConfig( {
+					name: 'foo',
+					config: {
+						ci: {
+							lint: {
+								changes: '/src/**/*.{js,jsx,ts,tsx}',
+								command: 'foo <invalid>',
+							},
+						},
+					},
+				} );
+			};
+			expect( expectation ).toThrow();
+		} );
+
+		it( 'should parse lint config with changes array', () => {
+			const parsed = parseCIConfig( {
+				name: 'foo',
+				config: {
+					ci: {
+						lint: {
+							changes: [
+								'/src/**/*.{js,jsx,ts,tsx}',
+								'/test/**/*.{js,jsx,ts,tsx}',
+							],
+							command: 'foo',
+						},
+					},
+				},
+			} );
+
+			expect( parsed ).toMatchObject( {
+				jobs: [
+					{
+						type: JobType.Lint,
+						changes: [
+							/^package\.json$/,
+							makeRe( '/src/**/*.{js,jsx,ts,tsx}' ),
+							makeRe( '/test/**/*.{js,jsx,ts,tsx}' ),
+						],
+						command: 'foo',
+					},
+				],
+			} );
+		} );
+
+		it( 'should parse test config', () => {
+			const parsed = parseCIConfig( {
+				name: 'foo',
+				config: {
+					ci: {
+						tests: [
+							{
+								name: 'default',
+								changes: '/src/**/*.{js,jsx,ts,tsx}',
+								command: 'foo',
+							},
+						],
+					},
+				},
+			} );
+
+			expect( parsed ).toMatchObject( {
+				jobs: [
+					{
+						type: JobType.Test,
+						testType: 'unit',
+						shardingArguments: [],
+						name: 'default',
+						changes: [
+							/^package\.json$/,
+							makeRe( '/src/**/*.{js,jsx,ts,tsx}' ),
+						],
+						command: 'foo',
+					},
+				],
+			} );
+		} );
+
+		it( 'should support extglob negation in changes patterns', () => {
+			const parsed = parseCIConfig( {
+				name: 'foo',
+				config: {
+					ci: {
+						tests: [
+							{
+								name: 'default',
+								changes: 'foo/{*,!(bar)/**}',
+								command: 'foo',
+							},
+						],
+					},
+				},
+			} );
+
+			// changes[ 0 ] is the implicit `package.json` glob.
+			const changes = parsed.jobs[ 0 ].changes[ 1 ];
+
+			expect( changes.test( 'foo/file.ts' ) ).toBe( true );
+			expect( changes.test( 'foo/baz/file.ts' ) ).toBe( true );
+			expect( changes.test( 'foo/baz/deep/file.ts' ) ).toBe( true );
+			expect( changes.test( 'foo/bar/file.ts' ) ).toBe( false );
+			expect( changes.test( 'foo/bar/deep/file.ts' ) ).toBe( false );
+		} );
+
+		it( 'should default to an empty ignore list', () => {
+			const parsed = parseCIConfig( {
+				name: 'foo',
+				config: {
+					ci: {
+						lint: {
+							changes: '/src/**/*.{js,jsx,ts,tsx}',
+							command: 'foo',
+						},
+					},
+				},
+			} );
+
+			expect( parsed ).toMatchObject( {
+				jobs: [
+					{
+						type: JobType.Lint,
+						ignore: [],
+					},
+				],
+			} );
+		} );
+
+		it.each( [
+			[ 'a string', '{,**/}*.md' ],
+			[ 'an array', [ '{,**/}*.md' ] ],
+		] )(
+			'should parse an ignore configuration given as %s',
+			( _, ignore ) => {
+				const parsed = parseCIConfig( {
+					name: 'foo',
+					config: {
+						ci: {
+							lint: {
+								changes: '/src/**/*.{js,jsx,ts,tsx}',
+								ignore,
+								command: 'foo',
+							},
+						},
+					},
+				} );
+
+				const compiled = parsed.jobs[ 0 ].ignore[ 0 ];
+
+				expect( compiled.test( 'README.md' ) ).toBe( true );
+				expect( compiled.test( 'docs/features/foo.md' ) ).toBe( true );
+				// Unlike `changes` globs, ignore globs compile with `dot: true`
+				// so the policy also reaches files inside dot directories.
+				expect( compiled.test( '.ai/skills/foo/SKILL.md' ) ).toBe(
+					true
+				);
+				expect( compiled.test( 'changelog/foo.php' ) ).toBe( false );
+			}
+		);
+
+		it( 'should inherit the project-level ignore list', () => {
+			const parsed = parseCIConfig( {
+				name: 'foo',
+				config: {
+					ci: {
+						ignore: [ '{,**/}*.md' ],
+						lint: {
+							changes: '/src/**/*.{js,jsx,ts,tsx}',
+							command: 'foo',
+						},
+						tests: [
+							{
+								name: 'default',
+								changes: '/src/**/*.{js,jsx,ts,tsx}',
+								command: 'foo',
+							},
+						],
+					},
+				},
+			} );
+
+			for ( const job of parsed.jobs ) {
+				expect( job.ignore ).toHaveLength( 1 );
+				expect( job.ignore[ 0 ].test( 'README.md' ) ).toBe( true );
+			}
+		} );
+
+		it( 'should replace the project-level ignore list with a job-level one', () => {
+			const parsed = parseCIConfig( {
+				name: 'foo',
+				config: {
+					ci: {
+						ignore: [ '{,**/}*.md' ],
+						lint: {
+							changes: '/src/**/*.{js,jsx,ts,tsx}',
+							ignore: [ '{,**/}readme.txt' ],
+							command: 'foo',
+						},
+						tests: [
+							{
+								name: 'default',
+								changes: '/src/**/*.{js,jsx,ts,tsx}',
+								ignore: [],
+								command: 'foo',
+							},
+						],
+					},
+				},
+			} );
+
+			// The lint job's own list replaces the default rather than
+			// extending it.
+			expect( parsed.jobs[ 0 ].ignore ).toHaveLength( 1 );
+			expect( parsed.jobs[ 0 ].ignore[ 0 ].test( 'README.md' ) ).toBe(
+				false
+			);
+			expect( parsed.jobs[ 0 ].ignore[ 0 ].test( 'readme.txt' ) ).toBe(
+				true
+			);
+
+			// An explicit empty list opts the test job out of the project
+			// default entirely.
+			expect( parsed.jobs[ 1 ].ignore ).toHaveLength( 0 );
+		} );
+
+		it( 'should error for an invalid project-level ignore list', () => {
+			const expectation = () => {
+				parseCIConfig( {
+					name: 'foo',
+					config: {
+						ci: {
+							ignore: [ '!**/*.md' ],
+							lint: {
+								changes: '/src/**/*.{js,jsx,ts,tsx}',
+								command: 'foo',
+							},
+						},
+					},
+				} );
+			};
+			expect( expectation ).toThrow();
+		} );
+
+		it( 'should support extglob negation in ignore patterns', () => {
+			const parsed = parseCIConfig( {
+				name: 'foo',
+				config: {
+					ci: {
+						lint: {
+							changes: '/src/**/*.{js,jsx,ts,tsx}',
+							ignore: [ '{,**/}changelog/!(*.ts|*.php)' ],
+							command: 'foo',
+						},
+					},
+				},
+			} );
+
+			const compiled = parsed.jobs[ 0 ].ignore[ 0 ];
+
+			expect( compiled.test( 'changelog/fix-123' ) ).toBe( true );
+			expect( compiled.test( 'src/changelog/index.ts' ) ).toBe( false );
+		} );
+
+		it.each( [
+			[ 'a non-string entry', [ 1 ] ],
+			[ 'a non-string value', 1 ],
+			[ 'a leading negation', [ '!**/*.md' ] ],
+		] )(
+			'should error for an ignore configuration with %s',
+			( _, ignore ) => {
+				const expectation = () => {
+					parseCIConfig( {
+						name: 'foo',
+						config: {
+							ci: {
+								lint: {
+									changes: '/src/**/*.{js,jsx,ts,tsx}',
+									ignore,
+									command: 'foo',
+								},
+							},
+						},
+					} );
+				};
+				expect( expectation ).toThrow();
+			}
+		);
+
+		it( 'should parse test config with environment', () => {
+			const parsed = parseCIConfig( {
+				name: 'foo',
+				config: {
+					ci: {
+						tests: [
+							{
+								name: 'default',
+								changes: '/src/**/*.{js,jsx,ts,tsx}',
+								command: 'foo',
+								testEnv: {
+									start: 'bar',
+									config: {
+										wpVersion: 'latest',
+									},
+								},
+							},
+						],
+					},
+				},
+			} );
+
+			expect( parsed ).toMatchObject( {
+				jobs: [
+					{
+						type: JobType.Test,
+						name: 'default',
+						changes: [
+							/^package\.json$/,
+							makeRe( '/src/**/*.{js,jsx,ts,tsx}' ),
+						],
+						command: 'foo',
+						testEnv: {
+							start: 'bar',
+							config: {
+								wpVersion: 'latest',
+							},
+						},
+					},
+				],
+			} );
+		} );
+
+		it( 'should parse test config with report', () => {
+			const parsed = parseCIConfig( {
+				name: 'foo',
+				config: {
+					ci: {
+						tests: [
+							{
+								name: 'default',
+								changes: '/src/**/*.{js,jsx,ts,tsx}',
+								command: 'foo',
+								report: {
+									resultsBlobName: 'foo-blob-report',
+									resultsPath: '/test-results',
+									allure: true,
+								},
+							},
+						],
+					},
+				},
+			} );
+
+			expect( parsed ).toMatchObject( {
+				jobs: [
+					{
+						type: JobType.Test,
+						name: 'default',
+						changes: [
+							/^package\.json$/,
+							makeRe( '/src/**/*.{js,jsx,ts,tsx}' ),
+						],
+						command: 'foo',
+						report: {
+							resultsBlobName: 'foo-blob-report',
+							resultsPath: '/test-results',
+							allure: true,
+						},
+					},
+				],
+			} );
+		} );
+
+		it.each( testTypes )(
+			'should parse test config with expected testType',
+			( testType ) => {
+				const parsed = parseCIConfig( {
+					name: 'foo',
+					config: {
+						ci: {
+							tests: [
+								{
+									name: 'default',
+									testType,
+									changes: '/src/**/*.{js,jsx,ts,tsx}',
+									command: 'foo',
+								},
+							],
+						},
+					},
+				} );
+
+				expect( parsed ).toMatchObject( {
+					jobs: [
+						{
+							type: JobType.Test,
+							testType,
+							shardingArguments: [],
+							name: 'default',
+							changes: [
+								/^package\.json$/,
+								makeRe( '/src/**/*.{js,jsx,ts,tsx}' ),
+							],
+							command: 'foo',
+						},
+					],
+				} );
+			}
+		);
+
+		it.each( [
+			[ '', 'unit' ],
+			[ 'bad', 'unit' ],
+			[ 1, 'unit' ],
+			[ undefined, 'unit' ],
+		] )(
+			'should parse test config with unexpected testType',
+			( input, result ) => {
+				const parsed = parseCIConfig( {
+					name: 'foo',
+					config: {
+						ci: {
+							tests: [
+								{
+									name: 'default',
+									testType: input,
+									changes: '/src/**/*.{js,jsx,ts,tsx}',
+									command: 'foo',
+								},
+							],
+						},
+					},
+				} );
+
+				expect( parsed ).toMatchObject( {
+					jobs: [
+						{
+							type: JobType.Test,
+							testType: result,
+							shardingArguments: [],
+							name: 'default',
+							changes: [
+								/^package\.json$/,
+								makeRe( '/src/**/*.{js,jsx,ts,tsx}' ),
+							],
+							command: 'foo',
+						},
+					],
+				} );
+			}
+		);
+
+		it.each( [
+			[ [], [] ],
+			[ undefined, [] ],
+			[
+				[ 'a', 'b' ],
+				[ 'a', 'b' ],
+			],
+		] )(
+			'should parse test config with shards',
+			( shardingArguments: any, result: string[] ) => {
+				const parsed = parseCIConfig( {
+					name: 'foo',
+					config: {
+						ci: {
+							tests: [
+								{
+									name: 'default',
+									testType: 'e2e',
+									shardingArguments,
+									changes: '/src/**/*.{js,jsx,ts,tsx}',
+									command: 'foo',
+								},
+							],
+						},
+					},
+				} );
+
+				expect( parsed ).toMatchObject( {
+					jobs: [
+						{
+							type: JobType.Test,
+							testType: 'e2e',
+							shardingArguments: result,
+							name: 'default',
+							changes: [
+								/^package\.json$/,
+								makeRe( '/src/**/*.{js,jsx,ts,tsx}' ),
+							],
+							command: 'foo',
+						},
+					],
+				} );
+			}
+		);
+
+		it( 'should return default optional value for jobs', () => {
+			const parsed = parseCIConfig( {
+				name: 'foo',
+				config: {
+					ci: {
+						lint: {
+							changes: [],
+							command: 'foo',
+						},
+						tests: [
+							{
+								name: 'default',
+								changes: [],
+								command: 'foo',
+							},
+						],
+					},
+				},
+			} );
+
+			expect( parsed ).toMatchObject( {
+				jobs: [
+					{
+						type: JobType.Lint,
+						optional: false,
+					},
+					{
+						type: JobType.Test,
+						optional: false,
+					},
+				],
+			} );
+		} );
+
+		it.each( [
+			[ true, true ],
+			[ false, false ],
+		] )(
+			'should parse config with values for the optional property',
+			( input, result ) => {
+				const parsed = parseCIConfig( {
+					name: 'foo',
+					config: {
+						ci: {
+							lint: {
+								changes: '/src/**/*.{js,jsx,ts,tsx}',
+								command: 'foo',
+								optional: input,
+							},
+						},
+					},
+				} );
+
+				expect( parsed ).toMatchObject( {
+					jobs: [
+						{
+							type: JobType.Lint,
+							optional: result,
+						},
+					],
+				} );
+			}
+		);
+
+		it.each( [ [ 'bad', 1, undefined ] ] )(
+			'should error for config with invalid values for the optional property',
+			( input ) => {
+				const expectation = () => {
+					parseCIConfig( {
+						name: 'foo',
+						config: {
+							ci: {
+								lint: {
+									changes: [],
+									command: 'some command',
+									optional: input,
+								},
+							},
+						},
+					} );
+				};
+				expect( expectation ).toThrow();
+			}
+		);
+
+		it( 'should parse config with the usesSharedPluginBuild property', () => {
+			const parsed = parseCIConfig( {
+				name: 'foo',
+				config: {
+					ci: {
+						tests: [
+							{
+								name: 'default',
+								changes: [],
+								command: 'foo',
+								usesSharedPluginBuild: true,
+							},
+							{
+								name: 'other',
+								changes: [],
+								command: 'foo',
+							},
+						],
+					},
+				},
+			} );
+
+			expect( parsed ).toMatchObject( {
+				jobs: [
+					{
+						type: JobType.Test,
+						usesSharedPluginBuild: true,
+					},
+					{
+						type: JobType.Test,
+					},
+				],
+			} );
+			expect( parsed?.jobs[ 1 ] ).not.toHaveProperty(
+				'usesSharedPluginBuild'
+			);
+		} );
+
+		it.each( [ [ 'bad' ], [ 1 ] ] )(
+			'should error for config with invalid values for the usesSharedPluginBuild property',
+			( input ) => {
+				const expectation = () => {
+					parseCIConfig( {
+						name: 'foo',
+						config: {
+							ci: {
+								tests: [
+									{
+										name: 'default',
+										changes: [],
+										command: 'foo',
+										usesSharedPluginBuild: input,
+									},
+								],
+							},
+						},
+					} );
+				};
+				expect( expectation ).toThrow(
+					'The "usesSharedPluginBuild" property must be a boolean.'
+				);
+			}
+		);
+	} );
+} );

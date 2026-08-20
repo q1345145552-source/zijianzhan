@@ -1,0 +1,60 @@
+<!-- wp:html -->
+<div class="shopee-carousel">
+  <div class="shopee-slide slide-1 active">
+    <div class="shopee-slide-title">超级大促 · 全场满 99 包邮</div>
+    <div class="shopee-slide-sub">泰国优选好物 · 正品保障 · 极速发货</div>
+    <a class="shopee-slide-btn" href="/shop/">立即抢购</a>
+  </div>
+  <div class="shopee-slide slide-2">
+    <div class="shopee-slide-title">新店开业 · 全场 8 折</div>
+    <div class="shopee-slide-sub">精选咖啡茶饮 · 限时特惠</div>
+    <a class="shopee-slide-btn" href="/product-category/coffee-tea/">去逛逛</a>
+  </div>
+  <div class="shopee-slide slide-3">
+    <div class="shopee-slide-title">数码配件 · 低至 5 折</div>
+    <div class="shopee-slide-sub">蓝牙耳机 · 智能好物</div>
+    <a class="shopee-slide-btn" href="/product-category/digital/">立即选购</a>
+  </div>
+  <div class="shopee-dots">
+    <button class="shopee-dot active" data-index="0" aria-label="第 1 张"></button>
+    <button class="shopee-dot" data-index="1" aria-label="第 2 张"></button>
+    <button class="shopee-dot" data-index="2" aria-label="第 3 张"></button>
+  </div>
+</div>
+<!-- /wp:html -->
+
+<!-- wp:group {"align":"full","layout":{"type":"constrained"}} -->
+<!-- wp:heading {"textAlign":"center"} -->
+<h2 class="wp-block-heading has-text-align-center">热门分类</h2>
+<!-- /wp:heading -->
+<!-- wp:html -->
+<div class="shopee-cats">
+<a class="shopee-cat" href="/product-category/coffee-tea/">咖啡与茶饮</a>
+<a class="shopee-cat" href="/product-category/apparel-bags/">服饰箱包</a>
+<a class="shopee-cat" href="/product-category/digital/">数码配件</a>
+<a class="shopee-cat" href="/product-category/home-living/">居家日用</a>
+<a class="shopee-cat" href="/product-category/snacks/">健康零食</a>
+</div>
+<!-- /wp:html -->
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"shopee-flashsale","align":"full","layout":{"type":"constrained"}} -->
+<!-- wp:heading {"textAlign":"center"} -->
+<h2 class="wp-block-heading has-text-align-center">限时抢购</h2>
+<!-- /wp:heading -->
+<!-- wp:paragraph {"align":"center"} -->
+<p class="has-text-align-center"><span class="shopee-countdown">距本场结束 <span class="countdown-time">00:00:00</span></span></p>
+<!-- /wp:paragraph -->
+<!-- wp:shortcode -->
+[products limit="4" columns="4" orderby="date" category="coffee-tea"]
+<!-- /wp:shortcode -->
+<!-- /wp:group -->
+
+<!-- wp:group {"align":"full","layout":{"type":"constrained"}} -->
+<!-- wp:heading {"textAlign":"center"} -->
+<h2 class="wp-block-heading has-text-align-center">精选推荐</h2>
+<!-- /wp:heading -->
+<!-- wp:shortcode -->
+[products limit="8" columns="4" orderby="date"]
+<!-- /wp:shortcode -->
+<!-- /wp:group -->

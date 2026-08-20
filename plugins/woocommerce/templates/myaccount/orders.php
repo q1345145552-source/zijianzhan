@@ -1,0 +1,178 @@
+<?php
+/**
+ * Orders
+ *
+ * Shows orders on the account page.
+ *
+ * This template can be overridden by copying it to yourtheme/woocommerce/myaccount/orders.php.
+ *
+ * HOWEVER, on occasion WooCommerce will need to update template files and you
+ * (the theme developer) will need to copy the new files to your theme to
+ * maintain compatibility. We try to do this as little as possible, but it does
+ * happen. When this occurs the version of the template file will be bumped and
+ * the readme will list any important changes.
+ *
+ * @see https://woocommerce.com/document/template-structure/
+ * @package WooCommerce\Templates
+ * @version 11.1.0
+ */
+
+defined( 'ABSPATH' ) || exit;
+
+do_action( 'woocommerce_before_account_orders', $has_orders ); ?>
+
+<?php if ( $has_orders ) : ?>
+
+	<table class="woocommerce-orders-table woocommerce-MyAccount-orders shop_table shop_table_responsive my_account_orders account-orders-table">
+		<thead>
+			<tr>
+				<?php foreach ( wc_get_account_orders_columns() as $column_id => $column_name ) : ?>
+					<th scope="col" class="woocommerce-orders-table__header woocommerce-orders-table__header-<?php echo esc_attr( $column_id ); ?>"><span class="nobr"><?php echo esc_html( $column_name ); ?></span></th>
+				<?php endforeach; ?>
+			</tr>
+		</thead>
+
+		<tbody>
+			<?php
+			foreach ( $customer_orders->orders as $customer_order ) {
+				$order = wc_get_order( $customer_order ); // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+				if ( ! $order instanceof WC_Order ) {
+					continue;
+				}
+				$item_count = $order->get_item_count() - $order->get_item_count_refunded();
+				?>
+				<tr class="woocommerce-orders-table__row woocommerce-orders-table__row--status-<?php echo esc_attr( $order->get_status() ); ?> order">
+					<?php foreach ( wc_get_account_orders_columns() as $column_id => $column_name ) :
+						$is_order_number = 'order-number' === $column_id;
+					?>
+						<?php if ( $is_order_number ) : ?>
+							<th class="woocommerce-orders-table__cell woocommerce-orders-table__cell-<?php echo esc_attr( $column_id ); ?>" data-title="<?php echo esc_attr( $column_name ); ?>" scope="row">
+						<?php else : ?>
+							<td class="woocommerce-orders-table__cell woocommerce-orders-table__cell-<?php echo esc_attr( $column_id ); ?>" data-title="<?php echo esc_attr( $column_name ); ?>">
+						<?php endif; ?>
+
+							<?php ob_start(); ?>
+
+							<?php if ( has_action( 'woocommerce_my_account_my_orders_column_' . $column_id ) ) : ?>
+								<?php do_action( 'woocommerce_my_account_my_orders_column_' . $column_id, $order ); ?>
+
+							<?php elseif ( $is_order_number ) : ?>
+								<?php /* translators: %s: the order number, usually accompanied by a leading # */ ?>
+								<a href="<?php echo esc_url( $order->get_view_order_url() ); ?>" aria-label="<?php echo esc_attr( sprintf( __( 'View order number %s', 'woocommerce' ), $order->get_order_number() ) ); ?>">
+									<?php echo esc_html( _x( '#', 'hash before order number', 'woocommerce' ) . $order->get_order_number() ); ?>
+								</a>
+
+							<?php elseif ( 'order-date' === $column_id ) : ?>
+								<time datetime="<?php echo esc_attr( $order->get_date_created()->date( 'c' ) ); ?>"><?php echo esc_html( wc_format_datetime( $order->get_date_created() ) ); ?></time>
+
+							<?php elseif ( 'order-status' === $column_id ) : ?>
+								<?php echo esc_html( wc_get_order_status_name( $order->get_status() ) ); ?>
+
+							<?php elseif ( 'order-total' === $column_id ) : ?>
+								<?php
+								/* translators: 1: formatted order total 2: total order items */
+								echo wp_kses_post( sprintf( _n( '%1$s for %2$s item', '%1$s for %2$s items', $item_count, 'woocommerce' ), $order->get_formatted_order_total(), $item_count ) );
+								?>
+
+							<?php elseif ( 'order-actions' === $column_id ) : ?>
+								<?php
+								$actions = wc_get_account_orders_actions( $order );
+
+								if ( ! empty( $actions ) ) {
+									foreach ( $actions as $key => $action ) { // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+										if ( empty( $action['aria-label'] ) ) {
+											// Generate the aria-label based on the action name.
+											/* translators: %1$s Action name, %2$s Order number. */
+											$action_aria_label = sprintf( __( '%1$s order number %2$s', 'woocommerce' ), $action['name'], $order->get_order_number() );
+										} else {
+											$action_aria_label = $action['aria-label'];
+										}
+										echo '<a href="' . esc_url( $action['url'] ) . '" class="woocommerce-button' . esc_attr( $wp_button_class ) . ' button ' . sanitize_html_class( $key ) . '" aria-label="' . esc_attr( $action_aria_label ) . '">' . esc_html( $action['name'] ) . '</a>';
+										unset( $action_aria_label );
+									}
+								}
+								?>
+							<?php endif; ?>
+
+							<?php
+							$column_content = trim( (string) ob_get_clean() );
+
+							/**
+							 * Filters the content of a My Account orders table column.
+							 *
+							 * The dynamic portion of the hook name, `$column_id`, refers to the
+							 * order table column ID. The filter receives the full cell content:
+							 * the default column HTML or, when callbacks are registered on the
+							 * `woocommerce_my_account_my_orders_column_{$column_id}` action, the
+							 * output of those callbacks. Default content is escaped before this
+							 * filter runs, and callbacks should return safe, escaped HTML.
+							 *
+							 * Callbacks that replace the content rather than append to it should
+							 * carry over the default markup's accessibility affordances: the order
+							 * number link's `aria-label`, the order action `aria-label`s, and the
+							 * order date `<time datetime>` attribute.
+							 *
+							 * This filter runs from the `myaccount/orders.php` template, so it is
+							 * not available on sites where a theme overrides the template with a
+							 * copy predating version 11.1.0. Registering the legacy action as well
+							 * is not a workaround for that: the action still suppresses the default
+							 * content and this filter then runs over the action's output, so
+							 * callbacks on both hooks emitting the same markup render it twice.
+							 *
+							 * @param string   $column_content Current column cell HTML.
+							 * @param WC_Order $order          Current order object.
+							 * @param string   $column_id      Current column ID.
+							 *
+							 * @since 11.1.0
+							 */
+							$filtered_column_content = apply_filters( 'woocommerce_account_orders_column_content_' . $column_id, $column_content, $order, $column_id );
+
+							if ( is_string( $filtered_column_content ) ) {
+								$column_content = $filtered_column_content;
+							} elseif ( is_int( $filtered_column_content ) || is_float( $filtered_column_content ) || ( is_object( $filtered_column_content ) && method_exists( $filtered_column_content, '__toString' ) ) ) {
+								$column_content = (string) $filtered_column_content;
+							} else {
+								wc_doing_it_wrong(
+									'woocommerce_account_orders_column_content_' . $column_id,
+									__( 'Filter callbacks must return a string (or stringable value) of safe, escaped HTML. Return an empty string to render an empty cell. The unfiltered column content was used instead.', 'woocommerce' ),
+									'11.1.0'
+								);
+							}
+
+							echo $column_content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Contains escaped default content or action hook output; filter callbacks must return safe HTML.
+							?>
+
+						<?php if ( $is_order_number ) : ?>
+							</th>
+						<?php else : ?>
+							</td>
+						<?php endif; ?>
+					<?php endforeach; ?>
+				</tr>
+				<?php
+			}
+			?>
+		</tbody>
+	</table>
+
+	<?php do_action( 'woocommerce_before_account_orders_pagination' ); ?>
+
+	<?php if ( 1 < $customer_orders->max_num_pages ) : ?>
+		<div class="woocommerce-pagination woocommerce-pagination--without-numbers woocommerce-Pagination">
+			<?php if ( 1 !== $current_page ) : ?>
+				<a class="woocommerce-button woocommerce-button--previous woocommerce-Button woocommerce-Button--previous button<?php echo esc_attr( $wp_button_class ); ?>" href="<?php echo esc_url( wc_get_endpoint_url( 'orders', $current_page - 1 ) ); ?>"><?php esc_html_e( 'Previous', 'woocommerce' ); ?></a>
+			<?php endif; ?>
+
+			<?php if ( intval( $customer_orders->max_num_pages ) !== $current_page ) : ?>
+				<a class="woocommerce-button woocommerce-button--next woocommerce-Button woocommerce-Button--next button<?php echo esc_attr( $wp_button_class ); ?>" href="<?php echo esc_url( wc_get_endpoint_url( 'orders', $current_page + 1 ) ); ?>"><?php esc_html_e( 'Next', 'woocommerce' ); ?></a>
+			<?php endif; ?>
+		</div>
+	<?php endif; ?>
+
+<?php else : ?>
+
+	<?php wc_print_notice( esc_html__( 'No order has been made yet.', 'woocommerce' ) . ' <a class="woocommerce-Button wc-forward button' . esc_attr( $wp_button_class ) . '" href="' . esc_url( apply_filters( 'woocommerce_return_to_shop_redirect', wc_get_page_permalink( 'shop' ) ) ) . '">' . esc_html__( 'Browse products', 'woocommerce' ) . '</a>', 'notice' ); // phpcs:ignore WooCommerce.Commenting.CommentHooks.MissingHookComment ?>
+
+<?php endif; ?>
+
+<?php do_action( 'woocommerce_after_account_orders', $has_orders ); ?>

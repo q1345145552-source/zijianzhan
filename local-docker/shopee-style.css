@@ -1,0 +1,702 @@
+/* ============================================
+   Shopee 泰国站风格定制 - 多主题可切换版
+   主题：default(Shopee橙) / minimal(简约白) / black-gold(黑金奢华) / green(清新绿)
+   切换方式：<html data-shopee-theme="...">
+   ============================================ */
+
+/* ---------- 默认主题：Shopee 橙 ---------- */
+:root,
+:root[data-shopee-theme="default"] {
+  --sp-primary: #ee4d2d;
+  --sp-primary-dark: #d73211;
+  --sp-accent: #febd69;
+  --sp-bg: #f5f5f5;
+  --sp-card-bg: #ffffff;
+  --sp-card-border: transparent;
+  --sp-text: #222;
+  --sp-text-2: #333;
+  --sp-muted: #999;
+  --sp-header-grad: linear-gradient(100deg, #f53d2d 0%, #ee4d2d 55%, #febd69 130%);
+  --sp-header-link-hover: #ffe3c9;
+  --sp-soft-bg: #fff8f6;
+  --sp-footer-bg: #212121;
+  --sp-footer-text: #b5b5b5;
+  --sp-footer-link: #ddd;
+  --sp-footer-link-hover: #febd69;
+  --sp-light: #fff;
+  --sp-light-2: #ffe8dd;
+  --sp-btn-text: #fff;
+  --sp-search-bg: #fff;
+  --sp-search-border: #febd69;
+  --sp-badge-bg: #fff;
+  --sp-badge-text: #ee4d2d;
+  --sp-star: #febd69;
+  --sp-slide-1: linear-gradient(120deg, #f53d2d, #ee4d2d 60%, #ff7a3c);
+  --sp-slide-2: linear-gradient(120deg, #ff8c42, #ff5b2e 60%, #ee4d2d);
+  --sp-slide-3: linear-gradient(120deg, #5b2a86, #8e44ad 60%, #a55eea);
+}
+
+/* ---------- 主题 2：简约白 ---------- */
+:root[data-shopee-theme="minimal"] {
+  --sp-primary: #2563eb;
+  --sp-primary-dark: #1e40af;
+  --sp-accent: #93c5fd;
+  --sp-bg: #fafafa;
+  --sp-card-bg: #ffffff;
+  --sp-card-border: 1px solid #e5e7eb;
+  --sp-text: #111827;
+  --sp-text-2: #374151;
+  --sp-muted: #9ca3af;
+  --sp-header-grad: linear-gradient(100deg, #111827, #1f2937);
+  --sp-header-link-hover: #93c5fd;
+  --sp-soft-bg: #f8fafc;
+  --sp-footer-bg: #111827;
+  --sp-footer-text: #9ca3af;
+  --sp-footer-link: #e5e7eb;
+  --sp-footer-link-hover: #93c5fd;
+  --sp-light: #fff;
+  --sp-light-2: #dbeafe;
+  --sp-btn-text: #fff;
+  --sp-search-bg: #fff;
+  --sp-search-border: #e5e7eb;
+  --sp-badge-bg: #2563eb;
+  --sp-badge-text: #fff;
+  --sp-star: #f59e0b;
+  --sp-slide-1: linear-gradient(120deg, #1f2937, #2563eb);
+  --sp-slide-2: linear-gradient(120deg, #4f46e5, #7c3aed);
+  --sp-slide-3: linear-gradient(120deg, #0ea5e9, #22d3ee);
+}
+
+/* ---------- 主题 3：黑金奢华 ---------- */
+:root[data-shopee-theme="black-gold"] {
+  --sp-primary: #d4af37;
+  --sp-primary-dark: #b8962e;
+  --sp-accent: #f5d97a;
+  --sp-bg: #0d0d0d;
+  --sp-card-bg: #181818;
+  --sp-card-border: 1px solid #2a2a2a;
+  --sp-text: #f5f5f5;
+  --sp-text-2: #d1d1d1;
+  --sp-muted: #8a8a8a;
+  --sp-header-grad: linear-gradient(100deg, #0a0a0a, #1a1a1a);
+  --sp-header-link-hover: #d4af37;
+  --sp-soft-bg: #141414;
+  --sp-footer-bg: #050505;
+  --sp-footer-text: #8a8a8a;
+  --sp-footer-link: #d4af37;
+  --sp-footer-link-hover: #f5d97a;
+  --sp-light: #fff;
+  --sp-light-2: #d4af37;
+  --sp-btn-text: #0d0d0d;
+  --sp-search-bg: #fff;
+  --sp-search-border: #d4af37;
+  --sp-badge-bg: #d4af37;
+  --sp-badge-text: #0d0d0d;
+  --sp-star: #d4af37;
+  --sp-slide-1: linear-gradient(120deg, #0a0a0a, #1f1f1f);
+  --sp-slide-2: linear-gradient(120deg, #1c1c1c, #2c2c2c);
+  --sp-slide-3: linear-gradient(120deg, #141414, #242424);
+}
+
+/* ---------- 主题 4：清新绿 ---------- */
+:root[data-shopee-theme="green"] {
+  --sp-primary: #16a34a;
+  --sp-primary-dark: #15803d;
+  --sp-accent: #86efac;
+  --sp-bg: #f0fdf4;
+  --sp-card-bg: #ffffff;
+  --sp-card-border: transparent;
+  --sp-text: #14532d;
+  --sp-text-2: #166534;
+  --sp-muted: #86a789;
+  --sp-header-grad: linear-gradient(100deg, #14532d, #16a34a 60%, #4ade80);
+  --sp-header-link-hover: #dcfce7;
+  --sp-soft-bg: #f0fdf4;
+  --sp-footer-bg: #14532d;
+  --sp-footer-text: #bbf7d0;
+  --sp-footer-link: #dcfce7;
+  --sp-footer-link-hover: #86efac;
+  --sp-light: #fff;
+  --sp-light-2: #dcfce7;
+  --sp-btn-text: #fff;
+  --sp-search-bg: #fff;
+  --sp-search-border: #86efac;
+  --sp-badge-bg: #16a34a;
+  --sp-badge-text: #fff;
+  --sp-star: #4ade80;
+  --sp-slide-1: linear-gradient(120deg, #14532d, #16a34a);
+  --sp-slide-2: linear-gradient(120deg, #166534, #22c55e);
+  --sp-slide-3: linear-gradient(120deg, #0f766e, #14b8a6);
+}
+
+/* ============================================
+   通用样式（全部使用变量）
+   ============================================ */
+
+/* ---------- 整体背景 ---------- */
+body {
+  background-color: var(--sp-bg) !important;
+}
+
+/* ---------- 顶部栏 ---------- */
+.wp-site-blocks > header,
+header.wp-block-template-part {
+  background: var(--sp-header-grad) !important;
+}
+.wp-site-blocks > header a,
+header.wp-block-template-part a {
+  color: var(--sp-light) !important;
+}
+.wp-site-blocks > header .wp-block-site-title,
+header.wp-block-template-part .wp-block-site-title {
+  font-weight: 800 !important;
+  letter-spacing: .5px;
+  text-shadow: 0 1px 2px rgba(0,0,0,.15);
+}
+.wp-site-blocks > header .wp-block-navigation a,
+header.wp-block-template-part .wp-block-navigation a {
+  color: var(--sp-light) !important;
+}
+.wp-site-blocks > header .wp-block-navigation a:hover,
+header.wp-block-template-part .wp-block-navigation a:hover {
+  color: var(--sp-header-link-hover) !important;
+}
+
+/* ---------- 商店页标题 ---------- */
+.wp-block-query-title {
+  color: var(--sp-text) !important;
+  font-weight: 700;
+}
+
+/* ---------- 商品卡片 ---------- */
+li.product,
+.wc-block-product {
+  background: var(--sp-card-bg) !important;
+  border: var(--sp-card-border);
+  border-radius: 8px !important;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,.08) !important;
+  transition: transform .2s ease, box-shadow .2s ease !important;
+}
+li.product:hover,
+.wc-block-product:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(0,0,0,.14) !important;
+}
+li.product .wc-block-components-product-image,
+li.product .woocommerce-loop-product__link img {
+  border-radius: 8px 8px 0 0;
+}
+
+/* ---------- 商品标题 ---------- */
+li.product .wp-block-post-title a,
+li.product .woocommerce-loop-product__title {
+  color: var(--sp-text-2) !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  line-height: 1.45 !important;
+  text-align: left !important;
+  text-decoration: none !important;
+}
+li.product .wp-block-post-title a:hover {
+  color: var(--sp-primary) !important;
+}
+
+/* ---------- 价格 ---------- */
+.wc-block-grid__product-price .wc-block-components-product-price__value,
+li.product .price,
+li.product .woocommerce-Price-amount {
+  color: var(--sp-primary) !important;
+  font-weight: 700 !important;
+  font-size: 16px !important;
+}
+.wc-block-grid__product-price .wc-block-components-product-price__regular,
+li.product del .woocommerce-Price-amount,
+li.product del {
+  color: var(--sp-muted) !important;
+  font-weight: 400 !important;
+  text-decoration: line-through;
+}
+
+/* ---------- 按钮 ---------- */
+.add_to_cart_button,
+li.product .wp-block-button__link,
+.wp-block-button__link,
+.button.alt {
+  background-color: var(--sp-primary) !important;
+  border: none !important;
+  border-radius: 4px !important;
+  color: var(--sp-btn-text) !important;
+  font-weight: 600 !important;
+  transition: background-color .15s ease !important;
+}
+.add_to_cart_button:hover,
+.wp-block-button__link:hover,
+.button.alt:hover {
+  background-color: var(--sp-primary-dark) !important;
+}
+
+/* ---------- 页脚 ---------- */
+.wp-site-blocks > footer,
+footer.wp-block-template-part {
+  background: var(--sp-footer-bg) !important;
+  color: var(--sp-footer-text) !important;
+}
+.wp-site-blocks > footer a,
+footer.wp-block-template-part a {
+  color: var(--sp-footer-link) !important;
+}
+.wp-site-blocks > footer a:hover,
+footer.wp-block-template-part a:hover {
+  color: var(--sp-footer-link-hover) !important;
+}
+
+/* ---------- 链接统一 ---------- */
+a {
+  color: var(--sp-primary);
+}
+
+/* ============================================
+   首页（商城布局）
+   ============================================ */
+
+/* ---------- 促销横幅 ---------- */
+.shopee-banner {
+  background: var(--sp-header-grad) !important;
+  border-radius: 12px;
+  margin-top: 16px;
+  padding: 48px 24px !important;
+}
+.shopee-banner .shopee-banner-title {
+  color: var(--sp-light) !important;
+  font-size: 30px !important;
+  font-weight: 800 !important;
+  margin-bottom: 8px;
+}
+.shopee-banner p {
+  color: var(--sp-light-2) !important;
+  font-size: 15px;
+}
+.shopee-banner .wp-block-button__link {
+  background: var(--sp-light) !important;
+  color: var(--sp-primary) !important;
+  font-weight: 700 !important;
+  border-radius: 999px !important;
+  padding: 12px 36px !important;
+}
+
+/* ---------- 分类导航 ---------- */
+.shopee-cats {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin: 8px 0;
+}
+.shopee-cat {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: var(--sp-card-bg);
+  border: var(--sp-card-border);
+  border-radius: 10px;
+  padding: 20px 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--sp-text-2) !important;
+  text-decoration: none !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,.08);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.shopee-cat:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,.12);
+  color: var(--sp-primary) !important;
+}
+
+/* ---------- 区块标题（左侧色条） ---------- */
+.wp-block-post-content .wp-block-group > .wp-block-heading {
+  position: relative;
+  padding-left: 14px;
+  font-size: 22px !important;
+  font-weight: 700 !important;
+}
+.wp-block-post-content .wp-block-group > .wp-block-heading::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 5px;
+  height: 22px;
+  border-radius: 3px;
+  background: var(--sp-primary);
+}
+
+/* ---------- 限时抢购框 ---------- */
+.shopee-flashsale {
+  border: 2px dashed var(--sp-primary);
+  border-radius: 12px;
+  padding: 20px;
+  background: var(--sp-soft-bg);
+}
+.shopee-flashsale > .wp-block-heading {
+  color: var(--sp-primary) !important;
+  text-align: center;
+}
+
+/* ---------- 移动端适配 ---------- */
+@media (max-width: 780px) {
+  .shopee-cats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .shopee-banner .shopee-banner-title {
+    font-size: 22px !important;
+  }
+}
+
+/* ============================================
+   顶部搜索栏 + 购物车
+   ============================================ */
+
+.shopee-search .wp-block-search__inside-wrapper {
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--sp-search-bg);
+  border: 2px solid var(--sp-search-border);
+}
+.shopee-search .wp-block-search__input {
+  border: none !important;
+  border-radius: 999px 0 0 999px !important;
+  padding: 10px 18px !important;
+  font-size: 14px;
+  min-width: 220px;
+}
+.shopee-search .wp-block-search__button {
+  background: var(--sp-accent) !important;
+  border: none !important;
+  border-radius: 0 999px 999px 0 !important;
+  color: var(--sp-primary) !important;
+  margin: 0 !important;
+}
+.shopee-search .wp-block-search__button svg {
+  fill: var(--sp-primary) !important;
+}
+
+.wp-block-woocommerce-mini-cart .wc-block-mini-cart__button {
+  color: var(--sp-light) !important;
+}
+.wp-block-woocommerce-mini-cart .wc-block-mini-cart__amount {
+  color: var(--sp-light) !important;
+  font-weight: 700;
+}
+.wp-block-woocommerce-mini-cart .wc-block-mini-cart__badge {
+  background: var(--sp-badge-bg) !important;
+  color: var(--sp-badge-text) !important;
+}
+
+/* ============================================
+   轮播横幅
+   ============================================ */
+
+.shopee-carousel {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  margin-top: 16px;
+}
+.shopee-carousel .shopee-slide {
+  display: none;
+  padding: 52px 32px;
+  border-radius: 12px;
+  text-align: center;
+}
+.shopee-carousel .shopee-slide.active {
+  display: block;
+}
+.shopee-slide.slide-1 { background: var(--sp-slide-1) !important; }
+.shopee-slide.slide-2 { background: var(--sp-slide-2) !important; }
+.shopee-slide.slide-3 { background: var(--sp-slide-3) !important; }
+.shopee-slide .shopee-slide-title {
+  color: var(--sp-light) !important;
+  font-size: 34px !important;
+  font-weight: 800 !important;
+  margin-bottom: 10px;
+}
+.shopee-slide .shopee-slide-sub {
+  color: var(--sp-light) !important;
+  font-size: 16px;
+  opacity: .95;
+}
+.shopee-slide .shopee-slide-btn {
+  display: inline-block;
+  margin-top: 18px;
+  background: var(--sp-light);
+  color: var(--sp-primary) !important;
+  font-weight: 700;
+  padding: 12px 36px;
+  border-radius: 999px;
+  text-decoration: none !important;
+}
+.shopee-carousel .shopee-dots {
+  position: absolute;
+  bottom: 14px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+.shopee-carousel .shopee-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.55);
+  cursor: pointer;
+  border: none;
+  padding: 0;
+}
+.shopee-carousel .shopee-dot.active {
+  background: var(--sp-light);
+  width: 22px;
+  border-radius: 6px;
+}
+
+/* ============================================
+   限时抢购倒计时
+   ============================================ */
+
+.shopee-countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--sp-primary);
+  color: var(--sp-btn-text);
+  border-radius: 999px;
+  padding: 6px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 10px;
+}
+.shopee-countdown .countdown-time {
+  font-variant-numeric: tabular-nums;
+  background: rgba(0,0,0,.25);
+  padding: 2px 10px;
+  border-radius: 6px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+/* ============================================
+   商品卡片：销量 + 评分
+   ============================================ */
+
+.shopee-sales {
+  color: var(--sp-muted) !important;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+}
+.shopee-rating {
+  color: var(--sp-primary) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
+.shopee-rating .star {
+  color: var(--sp-star);
+}
+
+/* ============================================
+   主题切换器（右下角悬浮）
+   ============================================ */
+
+/* ============================================
+   购物车页（Shopee 风格）
+   ============================================ */
+
+/* 商品列表区域：白卡片 */
+.wp-block-woocommerce-cart-items-block .wc-block-cart__items,
+.wc-block-cart__items {
+	background: var(--sp-card-bg);
+	border-radius: 12px;
+	padding: 8px 20px;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, .06);
+	border: var(--sp-card-border);
+}
+
+/* 商品行：分隔线 */
+.wc-block-cart-item {
+	border-bottom: 1px solid #f0f0f0;
+	padding: 18px 0;
+}
+.wc-block-cart-item:last-child {
+	border-bottom: none;
+}
+.wc-block-cart-item__image img {
+	border-radius: 10px;
+	border: 1px solid #f0f0f0;
+}
+
+/* 商品名 */
+.wc-block-cart-item__product-name a {
+	color: var(--sp-text-2) !important;
+	font-size: 15px !important;
+	font-weight: 600;
+	text-decoration: none;
+	transition: color .15s ease;
+}
+.wc-block-cart-item__product-name a:hover {
+	color: var(--sp-primary) !important;
+}
+
+/* 商品价格：Shopee 橙 */
+.wc-block-cart-item__prices .wc-block-components-product-price,
+.wc-block-cart-item__prices .wc-block-components-product-price__value {
+	color: var(--sp-primary) !important;
+	font-weight: 700 !important;
+	font-size: 15px !important;
+}
+
+/* 数量选择器：圆角 + 橙色按钮 */
+.wc-block-components-quantity-selector {
+	border: 1px solid #ddd !important;
+	border-radius: 999px !important;
+	overflow: hidden;
+	background: #fff;
+}
+.wc-block-components-quantity-selector__button {
+	color: var(--sp-primary) !important;
+	font-weight: 700;
+	font-size: 16px;
+	transition: background .15s ease;
+}
+.wc-block-components-quantity-selector__button:hover {
+	background: var(--sp-soft-bg) !important;
+}
+.wc-block-components-quantity-selector__input {
+	font-weight: 600 !important;
+}
+
+/* 移除链接 */
+.wc-block-cart-item__remove-link {
+	color: var(--sp-muted) !important;
+	text-decoration: underline;
+	transition: color .15s ease;
+}
+.wc-block-cart-item__remove-link:hover {
+	color: var(--sp-primary) !important;
+}
+
+/* 合计区域：白卡片 */
+.wc-block-cart__totals {
+	background: var(--sp-card-bg);
+	border-radius: 12px;
+	padding: 22px;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, .06);
+	border: var(--sp-card-border);
+}
+.wc-block-cart__totals-title {
+	font-size: 18px !important;
+	font-weight: 700 !important;
+	color: var(--sp-text) !important;
+}
+.wc-block-cart-subtotal .wc-block-components-totals-item__value {
+	color: var(--sp-primary) !important;
+	font-weight: 700;
+}
+
+/* 结账按钮：Shopee 橙大按钮 */
+.wc-block-cart__submit-button,
+.wc-block-components-checkout-button {
+	background: var(--sp-primary) !important;
+	border-radius: 6px !important;
+	color: var(--sp-btn-text) !important;
+	font-weight: 700 !important;
+	font-size: 15px !important;
+	padding: 14px !important;
+	width: 100%;
+	transition: background .15s ease, transform .1s ease, box-shadow .15s ease;
+}
+.wc-block-cart__submit-button:hover {
+	background: var(--sp-primary-dark) !important;
+	transform: translateY(-1px);
+	box-shadow: 0 4px 12px rgba(238, 77, 45, .3);
+}
+
+/* 空购物车提示 */
+.wc-block-cart__empty-cart__title {
+	color: var(--sp-text) !important;
+}
+.wc-block-cart__empty-cart__title .wc-block-cart__empty-cart-icon {
+	opacity: .8;
+}
+
+/* ---------- 前台顶部 logo ---------- */
+.shopee-header-logo {
+	margin: 0 !important;
+}
+.shopee-header-logo img {
+	width: 40px !important;
+	height: 40px !important;
+	border-radius: 8px;
+	object-fit: contain;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, .2);
+}
+
+.shopee-theme-switcher {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 99999;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+.shopee-theme-toggle {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: none;
+  background: var(--sp-primary);
+  color: #fff;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0,0,0,.25);
+  transition: transform .2s ease;
+}
+.shopee-theme-toggle:hover {
+  transform: scale(1.08);
+}
+.shopee-theme-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  bottom: 62px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0,0,0,.18);
+  padding: 8px;
+  min-width: 150px;
+}
+.shopee-theme-menu.open {
+  display: block;
+}
+.shopee-theme-menu button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  border: none;
+  background: none;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+  text-align: left;
+}
+.shopee-theme-menu button:hover {
+  background: #f5f5f5;
+}
+.shopee-theme-menu button.active {
+  background: #fff1ec;
+  color: #ee4d2d;
+  font-weight: 600;
+}

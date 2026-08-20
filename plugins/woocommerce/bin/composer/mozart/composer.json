@@ -1,0 +1,10 @@
+{
+	"require-dev": {
+		"coenjacobs/mozart": "^0.7.1"
+	},
+	"config": {
+		"platform": {
+			"php": "7.3"
+		}
+	}
+}

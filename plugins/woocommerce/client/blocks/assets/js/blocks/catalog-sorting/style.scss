@@ -1,0 +1,24 @@
+.woocommerce.wc-block-catalog-sorting {
+	form {
+		float: none;
+	}
+
+	label.orderby-label {
+		margin-right: 0.25rem;
+	}
+
+	select.orderby {
+		field-sizing: content;
+		font-size: inherit;
+	}
+
+	&.has-text-color {
+		select.orderby {
+			color: inherit;
+		}
+	}
+
+	.woocommerce-ordering {
+		margin: auto;
+	}
+}

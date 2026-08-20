@@ -1,0 +1,1220 @@
+<?php
+/**
+ * Reports Customers REST API Test
+ *
+ * @package WooCommerce\Admin\Tests\API
+ * @since 3.5.0
+ */
+
+// phpcs:disable Squiz.Classes.ClassFileName.NoMatch, Squiz.Classes.ValidClassName.NotCamelCaps
+
+use Automattic\WooCommerce\Admin\API\Reports\Customers\DataStore as CustomersDataStore;
+use Automattic\WooCommerce\Enums\OrderStatus;
+
+/**
+ * Reports Customers REST API Test Class
+ * @package WooCommerce\Admin\Tests\API
+ * @since 3.5.0
+ */
+class WC_Admin_Tests_API_Reports_Customers extends WC_REST_Unit_Test_Case {
+	/**
+	 * Endpoint.
+	 *
+	 * @var string
+	 */
+	protected $endpoint = '/wc-analytics/reports/customers';
+
+	/**
+	 * Setup test reports products data.
+	 *
+	 * @since 3.5.0
+	 */
+	public function setUp(): void {
+		parent::setUp();
+
+		$this->user = $this->factory->user->create(
+			array(
+				'role' => 'administrator',
+			)
+		);
+
+		// Disable report caching for this test class — these tests exercise
+		// query semantics, not cache behaviour.  A separate issue (#64557)
+		// tracks the cache-invalidation timing bug that stable cache keys
+		// have surfaced.
+		add_filter( 'woocommerce_analytics_report_should_use_cache', '__return_false' );
+	}
+
+	/**
+	 * Clean up after tests.
+	 */
+	public function tearDown(): void {
+		remove_filter( 'woocommerce_analytics_report_should_use_cache', '__return_false' );
+		parent::tearDown();
+	}
+
+	/**
+	 * Test route registration.
+	 *
+	 * @since 3.5.0
+	 */
+	public function test_register_routes() {
+		// This namespace may be lazy loaded, so we make a discovery request to trigger loading for this test.
+		$this->server->dispatch( new WP_REST_Request( 'GET', '/' ) );
+		$routes = $this->server->get_routes();
+
+		$this->assertArrayHasKey( $this->endpoint, $routes );
+	}
+
+	/**
+	 * Asserts the report item schema is correct.
+	 *
+	 * @param array $schema Item to check schema.
+	 */
+	public function assert_report_item_schema( $schema ) {
+		$this->assertArrayHasKey( 'id', $schema );
+		$this->assertArrayHasKey( 'user_id', $schema );
+		$this->assertArrayHasKey( 'name', $schema );
+		$this->assertArrayHasKey( 'first_name', $schema );
+		$this->assertArrayHasKey( 'last_name', $schema );
+		$this->assertArrayHasKey( 'email', $schema );
+		$this->assertArrayHasKey( 'username', $schema );
+		$this->assertArrayHasKey( 'role', $schema );
+		$this->assertArrayHasKey( 'country', $schema );
+		$this->assertArrayHasKey( 'city', $schema );
+		$this->assertArrayHasKey( 'state', $schema );
+		$this->assertArrayHasKey( 'postcode', $schema );
+		$this->assertArrayHasKey( 'billing_phone', $schema );
+		$this->assertArrayHasKey( 'shipping_phone', $schema );
+		$this->assertArrayHasKey( 'date_registered', $schema );
+		$this->assertArrayHasKey( 'date_registered_gmt', $schema );
+		$this->assertArrayHasKey( 'date_last_active', $schema );
+		$this->assertArrayHasKey( 'date_last_active_gmt', $schema );
+		$this->assertArrayHasKey( 'orders_count', $schema );
+		$this->assertArrayHasKey( 'total_spend', $schema );
+		$this->assertArrayHasKey( 'avg_order_value', $schema );
+	}
+
+	/**
+	 * Test reports schema.
+	 *
+	 * @since 3.5.0
+	 */
+	public function test_reports_schema() {
+		wp_set_current_user( $this->user );
+
+		$request    = new WP_REST_Request( 'OPTIONS', $this->endpoint );
+		$response   = $this->server->dispatch( $request );
+		$data       = $response->get_data();
+		$properties = $data['schema']['properties'];
+
+		$this->assertCount( 21, $properties );
+		$this->assert_report_item_schema( $properties );
+	}
+
+	/**
+	 * Test getting reports without valid permissions.
+	 *
+	 * @since 3.5.0
+	 */
+	public function test_get_reports_without_permission() {
+		wp_set_current_user( 0 );
+		$response = $this->server->dispatch( new WP_REST_Request( 'GET', $this->endpoint ) );
+		$this->assertEquals( 401, $response->get_status() );
+	}
+
+	/**
+	 * Test calling update_registered_customer() with a bad user id.
+	 *
+	 * @since 3.5.0
+	 */
+	public function test_update_registered_customer_with_bad_user_id() {
+		$result = CustomersDataStore::update_registered_customer( 2 );
+		$this->assertFalse( $result );
+	}
+
+	/**
+	 * Test creation of various user roles
+	 *
+	 * @since 3.5.0
+	 */
+	public function test_user_creation() {
+		wp_set_current_user( $this->user );
+		$admin_id = wp_insert_user(
+			array(
+				'user_login' => 'testadmin',
+				'user_pass'  => null,
+				'role'       => 'administrator',
+			)
+		);
+
+		// Admin user without orders should not be shown.
+		$request = new WP_REST_Request( 'GET', $this->endpoint );
+		$request->set_query_params( array( 'per_page' => 10 ) );
+		$response = $this->server->dispatch( $request );
+		$reports  = $response->get_data();
+		$headers  = $response->get_headers();
+
+		$this->assertEquals( 200, $response->get_status() );
+		$this->assertCount( 0, $reports );
+
+		// Creating an order with admin should return the admin.
+		$product = new WC_Product_Simple();
+		$product->set_name( 'Test Product' );
+		$product->set_regular_price( 25 );
+		$product->save();
+
+		$order = WC_Helper_Order::create_order( $admin_id, $product );
+		$order->set_status( OrderStatus::PROCESSING );
+		$order->set_total( 100 );
+		$order->save();
+
+		WC_Helper_Queue::run_all_pending( 'wc-admin-data' );
+
+		$request = new WP_REST_Request( 'GET', $this->endpoint );
+		$request->set_query_params( array( 'per_page' => 10 ) );
+		$response = $this->server->dispatch( $request );
+		$reports  = $response->get_data();
+		$headers  = $response->get_headers();
+
+		$this->assertEquals( 200, $response->get_status() );
+		$this->assertCount( 1, $reports );
+		$this->assertEquals( $admin_id, $reports[0]['user_id'] );
+
+		// Creating a customer should show up regardless of orders.
+		$customer = WC_Helper_Customer::create_customer( 'customer', 'password', 'customer@example.com' );
+
+		WC_Helper_Queue::run_all_pending( 'wc-admin-data' );
+
+		$request = new WP_REST_Request( 'GET', $this->endpoint );
+		$request->set_query_params(
+			array(
+				'per_page' => 10,
+				'order'    => 'asc',
+				'orderby'  => 'username',
+			)
+		);
+		$response = $this->server->dispatch( $request );
+		$reports  = $response->get_data();
+		$headers  = $response->get_headers();
+
+		$this->assertEquals( 200, $response->get_status() );
+		$this->assertCount( 2, $reports );
+		$this->assertEquals( $customer->get_id(), $reports[0]['user_id'] );
+		$this->assertEquals( $admin_id, $reports[1]['user_id'] );
+	}
+
+	/**
+	 * @testdox Should include localized user roles in the response and an empty role for guests.
+	 */
+	public function test_customer_role_in_response() {
+		wp_set_current_user( $this->user );
+
+		$customer = WC_Helper_Customer::create_customer( 'rolecustomer', 'password', 'role-customer@example.com' );
+
+		$editor_id = wp_insert_user(
+			array(
+				'user_login' => 'roleeditor',
+				'user_pass'  => 'password',
+				'user_email' => 'role-editor@example.com',
+				'role'       => 'editor',
+			)
+		);
+		$editor    = new WP_User( $editor_id );
+		$editor->add_role( 'shop_manager' );
+
+		// Editors are not synced as registered customers, so they enter the report via an order.
+		$editor_order = WC_Helper_Order::create_order( $editor_id );
+
+		// Order with guest customer (no account).
+		$guest_order = WC_Helper_Order::create_order( 0 );
+		$guest_order->set_billing_email( 'role-guest@example.com' );
+		$guest_order->save();
+
+		// Sync the lookup table directly to keep the test independent of the queue.
+		$this->assertNotFalse( CustomersDataStore::update_registered_customer( $customer->get_id() ) );
+		$this->assertGreaterThan( 0, CustomersDataStore::get_or_create_customer_from_order( $editor_order ) );
+		$this->assertGreaterThan( 0, CustomersDataStore::get_or_create_customer_from_order( $guest_order ) );
+
+		$request = new WP_REST_Request( 'GET', $this->endpoint );
+		$request->set_query_params( array( 'per_page' => 10 ) );
+		$response = $this->server->dispatch( $request );
+		$reports  = $response->get_data();
+
+		$this->assertEquals( 200, $response->get_status() );
+		$this->assertCount( 3, $reports );
+
+		$roles_by_user_id = array();
+		foreach ( $reports as $report ) {
+			$roles_by_user_id[ (int) $report['user_id'] ] = $report['role'];
+		}
+
+		$this->assertEquals( 'Customer', $roles_by_user_id[ $customer->get_id() ], 'Registered customers should report their role' );
+		$this->assertEquals( 'Editor, Shop manager', $roles_by_user_id[ $editor_id ], 'Users with multiple roles should report all of them' );
+		$this->assertSame( '', $roles_by_user_id[0], 'Guest customers should report an empty role' );
+
+		$controller     = new \Automattic\WooCommerce\Admin\API\Reports\Customers\Controller();
+		$export_columns = $controller->get_export_columns();
+		$this->assertArrayHasKey( 'role', $export_columns, 'CSV export should include a role column' );
+		$this->assertEquals( 'Role', $export_columns['role'] );
+		$this->assertSame( 'role', array_key_last( $export_columns ), 'Role must stay the last CSV column so positional consumers of the pre-existing columns are unaffected' );
+
+		$export_roles_by_user_id = array();
+		foreach ( $reports as $report ) {
+			$export_item = $controller->prepare_item_for_export( $report );
+			$export_roles_by_user_id[ (int) $report['user_id'] ] = $export_item['role'];
+			$this->assertSame( 'role', array_key_last( $export_item ), 'Role must stay the last column in prepared export rows, matching the header order' );
+		}
+
+		$this->assertEquals( 'Editor, Shop manager', $export_roles_by_user_id[ $editor_id ], 'CSV export should carry the role value' );
+		$this->assertSame( '', $export_roles_by_user_id[0], 'CSV export should leave the role empty for guests' );
+	}
+
+	/**
+	 * Test getting reports.
+	 *
+	 * @since 3.5.0
+	 */
+	public function test_get_reports() {
+		global $wpdb;
+
+		wp_set_current_user( $this->user );
+		$stale_customer = WC_Helper_Customer::create_customer( 'stale_report_customer', 'password', 'stale-report@example.com' );
+		$this->assertNotFalse( CustomersDataStore::update_registered_customer( $stale_customer->get_id() ) );
+		$this->assertNotFalse( CustomersDataStore::get_customer_id_by_user_id( $stale_customer->get_id() ) );
+		WC_Helper_Reports::reset_stats_dbs();
+		$this->assertFalse( CustomersDataStore::get_customer_id_by_user_id( $stale_customer->get_id() ) );
+
+		$test_customers = array();
+
+		$customer_names = array( 'Alice', 'Betty', 'Catherine', 'Dan', 'Eric', 'Fred', 'Greg', 'Henry', 'Ivan', 'Justin' );
+
+		// Create 10 test customers.
+		for ( $i = 1; $i <= 10; $i++ ) {
+			$name     = $customer_names[ $i - 1 ];
+			$email    = 'customer+' . strtolower( $name ) . '@example.com';
+			$customer = WC_Helper_Customer::create_customer( "customer{$i}", 'password', $email );
+			$customer->set_first_name( $name );
+			$customer->save();
+			$test_customers[] = $customer;
+		}
+
+		// Create a test product for use in an order.
+		$product = new WC_Product_Simple();
+		$product->set_name( 'Test Product' );
+		$product->set_regular_price( 25 );
+		$product->save();
+
+		// Place an order for the first test customer.
+		$order = WC_Helper_Order::create_order( $test_customers[0]->get_id(), $product );
+		$order->set_status( OrderStatus::PROCESSING );
+		$order->set_total( 100 );
+		$order->save();
+
+		WC_Helper_Queue::run_all_pending( 'wc-admin-data' );
+
+		$request = new WP_REST_Request( 'GET', $this->endpoint );
+		$request->set_query_params(
+			array(
+				'per_page' => 5,
+				'order'    => 'asc',
+				'orderby'  => 'username',
+			)
+		);
+
+		$response = $this->server->dispatch( $request );
+		$reports  = $response->get_data();
+		$headers  = $response->get_headers();
+
+		$this->assertEquals( 200, $response->get_status() );
+		$this->assertCount( 5, $reports );
+		$this->assertArrayHasKey( 'X-WP-Total', $headers );
+		$this->assertEquals( 10, $headers['X-WP-Total'] );
+		$this->assertArrayHasKey( 'X-WP-TotalPages', $headers );
+		$this->assertEquals( 2, $headers['X-WP-TotalPages'] );
+		$this->assertEquals( $test_customers[0]->get_id(), $reports[0]['user_id'] );
+		$this->assertEquals( 1, $reports[0]['orders_count'] );
+		$this->assertEquals( 100, $reports[0]['total_spend'] );
+		$this->assert_report_item_schema( $reports[0] );
+
+		// Test name and last_order parameters.
+		$request->set_query_params(
+			array(
+				'search'           => 'Alice',
+				'last_order_after' => gmdate( 'Y-m-d' ) . 'T00:00:00Z',
+			)
+		);
+		$response = $this->server->dispatch( $request );
+		$reports  = $response->get_data();
+
+		$this->assertEquals( 200, $response->get_status() );
+		$this->assertCount( 1, $reports );
+
+		$this->assertEquals( $test_customers[0]->get_id(), $reports[0]['user_id'] );
+		$this->assertEquals( 1, $reports[0]['orders_count'] );
+		$this->assertEquals( 100, $reports[0]['total_spend'] );
+
+		$customer_id = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT customer_id FROM {$wpdb->prefix}wc_customer_lookup WHERE user_id = %d",
+				$reports[0]['user_id']
+			)
+		);
+
+		// Test customers param.
+		$request->set_query_params(
+			array(
+				'customers' => $customer_id,
+			)
+		);
+
+		$response = $this->server->dispatch( $request );
+		$reports  = $response->get_data();
+		$this->assertEquals( 200, $response->get_status() );
+		$this->assertCount( 1, $reports );
+		$this->assertEquals( $test_customers[0]->get_id(), $reports[0]['user_id'] );
+	}
+
+	/**
+	 * @testdox Test the search and searchby parameters.
+	 */
+	public function test_customer_search() {
+		wp_set_current_user( $this->user );
+
+		$customer = WC_Helper_Customer::create_customer( 'onlyatest', 'password', 'onlyatest@example.com' );
+		$customer->set_first_name( 'Jay' );
+		$customer->set_last_name( 'Ramathorn' );
+		$customer->save();
+
+		$customer = WC_Helper_Customer::create_customer( 'jaytest', 'password', 'justatest@example.com' );
+		$customer->set_first_name( 'Jason' );
+		$customer->set_last_name( 'Roto' );
+		$customer->save();
+
+		$customer = WC_Helper_Customer::create_customer( 'womack2001', 'password', 'mac@jaybird.local' );
+		$customer->set_first_name( 'Steve' );
+		$customer->set_last_name( 'Letme' );
+		$customer->save();
+
+		$customer = WC_Helper_Customer::create_customer( 'sotero', 'password', 'bananas@example.com' );
+		$customer->set_first_name( 'Carl' );
+		$customer->set_last_name( 'Foster' );
+		$customer->save();
+
+		$order = WC_Helper_Order::create_order( 0 ); // Order with guest customer (no account).
+		$order->set_billing_email( 'rjayfarva@ramrod.local' );
+		$order->set_billing_last_name( 'Arjay' );
+		$order->save();
+
+		// Ensure order customer data is synced to lookup table.
+		WC_Helper_Queue::run_all_pending( 'wc-admin-data' );
+
+		$query_params = array(
+			'force_cache_refresh' => true,
+			'order'               => 'asc',
+			'orderby'             => 'name',
+			'order_before'        => '',
+			'order_after'         => '',
+		);
+
+		$request = new WP_REST_Request( 'GET', $this->endpoint );
+		$request->set_query_params( $query_params );
+		$response = $this->server->dispatch( $request );
+		$reports  = $response->get_data();
+		$this->assertEquals( 200, $response->get_status() );
+		$this->assertCount( 5, $reports ); // No search string, so all customers should return.
+
+		$query_params['search']   = 'Jay';
+		$query_params['searchby'] = 'name';
+		$request->set_query_params( $query_params );
+		$response = $this->server->dispatch( $request );
+		$reports  = $response->get_data();
+		$this->assertEquals( 200, $response->get_status() );
+		$this->assertCount( 2, $reports );
+
+		$query_params['searchby'] = 'username';
+		$request->set_query_params( $query_params );
+		$response = $this->server->dispatch( $request );
+		$reports  = $response->get_data();
+		$this->assertEquals( 200, $response->get_status() );
+		$this->assertCount( 1, $reports );
+
+		$query_params['searchby'] = 'email';
+		$request->set_query_params( $query_params );
+		$response = $this->server->dispatch( $request );
+		$reports  = $response->get_data();
+		$this->assertEquals( 200, $response->get_status() );
+		$this->assertCount( 2, $reports );
+
+		$query_params['searchby'] = 'all';
+		$request->set_query_params( $query_params );
+		$response = $this->server->dispatch( $request );
+		$reports  = $response->get_data();
+		$this->assertEquals( 200, $response->get_status() );
+		$this->assertCount( 4, $reports );
+
+		$query_params['search'] = 'Not A Customer';
+		$request->set_query_params( $query_params );
+		$response = $this->server->dispatch( $request );
+		$reports  = $response->get_data();
+		$this->assertEquals( 200, $response->get_status() );
+		$this->assertCount( 0, $reports );
+	}
+
+	/**
+	 * Test getting reports with filter_empty parameter
+	 */
+	public function test_get_reports_with_filter_empty() {
+		wp_set_current_user( $this->user );
+		WC_Helper_Reports::reset_stats_dbs();
+
+		// Test empty reports.
+		$request = new WP_REST_Request( 'GET', $this->endpoint );
+
+		$response = $this->server->dispatch( $request );
+		$reports  = $response->get_data();
+		$this->assertEquals( 200, $response->get_status() );
+		$this->assertCount( 0, $reports );
+
+		// Test filter_empty param by name.
+		$request->set_query_params(
+			array(
+				'filter_empty' => array( 'name' ),
+			)
+		);
+		$response = $this->server->dispatch( $request );
+		$reports  = $response->get_data();
+		$this->assertCount( 0, $reports );
+
+		$customer = WC_Helper_Customer::create_customer( 'customer_1', 'password', 'customer_1@example.com' );
+		$customer->set_billing_city( '' );
+		$customer->set_first_name( 'customer_andrei_1' );
+		$customer->save();
+		WC_Helper_Queue::run_all_pending( 'wc-admin-data' );
+
+		$request->set_query_params(
+			array(
+				'filter_empty' => array( 'city', 'email' ),
+			)
+		);
+		$response = $this->server->dispatch( $request );
+		$reports  = $response->get_data();
+		$this->assertCount( 0, $reports );
+
+		$request->set_query_params(
+			array(
+				'filter_empty' => array( 'email' ),
+			)
+		);
+		$response = $this->server->dispatch( $request );
+		$reports  = $response->get_data();
+		$this->assertCount( 1, $reports );
+
+		// Test filter_empty param by email and search.
+		$request->set_query_params(
+			array(
+				'filter_empty' => array( 'email' ),
+				'search'       => 'andrei',
+			)
+		);
+		$response = $this->server->dispatch( $request );
+		$reports  = $response->get_data();
+		$this->assertCount( 1, $reports );
+
+		// Test filter_empty param by state and postcode non empty.
+		$customer = WC_Helper_Customer::create_customer( 'customer_2', 'password', 'customer_2@example.com' );
+		WC_Helper_Queue::run_all_pending( 'wc-admin-data' );
+
+		$request->set_query_params(
+			array(
+				'filter_empty' => array( 'email', 'state' ),
+			)
+		);
+		$response = $this->server->dispatch( $request );
+		$reports  = $response->get_data();
+		$this->assertCount( 2, $reports );
+
+		// Test filter_empty param by country.
+		$request->set_query_params(
+			array(
+				'filter_empty' => array( 'country' ),
+			)
+		);
+		$response = $this->server->dispatch( $request );
+		$reports  = $response->get_data();
+		$this->assertCount( 2, $reports );
+
+		// Test filter_empty param by city.
+		$request->set_query_params(
+			array(
+				'filter_empty' => array( 'city' ),
+			)
+		);
+		$response = $this->server->dispatch( $request );
+		$reports  = $response->get_data();
+		$this->assertCount( 1, $reports );
+
+		// Test filter_empty param by state.
+		$request->set_query_params(
+			array(
+				'filter_empty' => array( 'state' ),
+			)
+		);
+		$response = $this->server->dispatch( $request );
+		$reports  = $response->get_data();
+		$this->assertCount( 2, $reports );
+	}
+
+	/**
+	 * Test customer user profile name priority.
+	 */
+	public function test_customer_user_profile_name() {
+		wp_set_current_user( $this->user );
+
+		$customer = wp_insert_user(
+			array(
+				'first_name' => 'Tyrion',
+				'last_name'  => 'Lanister',
+				'user_login' => 'daenerys',
+				'user_pass'  => null,
+				'role'       => 'customer',
+			)
+		);
+
+		$order = WC_Helper_Order::create_order( $customer );
+		$order->set_billing_first_name( 'Jon' );
+		$order->set_billing_last_name( 'Snow' );
+		$order->set_status( OrderStatus::COMPLETED );
+		$order->set_total( 100 );
+		$order->save();
+
+		WC_Helper_Queue::run_all_pending( 'wc-admin-data' );
+
+		$request  = new WP_REST_Request( 'GET', $this->endpoint );
+		$response = $this->server->dispatch( $request );
+		$reports  = $response->get_data();
+		$headers  = $response->get_headers();
+
+		$this->assertEquals( 200, $response->get_status() );
+		$this->assertCount( 1, $reports );
+		$this->assertEquals( 'Tyrion Lanister', $reports[0]['name'] );
+	}
+
+
+	/**
+	 * Test customer billing name priority.
+	 */
+	public function test_customer_billing_name() {
+		wp_set_current_user( $this->user );
+
+		// Test shipping name and empty billing name on a guest account.
+		$order = WC_Helper_Order::create_order( 0 );
+		$order->set_billing_first_name( 'Jon' );
+		$order->set_billing_last_name( 'Snow' );
+		$order->set_shipping_first_name( 'IgnoredFirstName' );
+		$order->set_shipping_last_name( 'IgnoredLastName' );
+		$order->set_status( OrderStatus::COMPLETED );
+		$order->set_total( 100 );
+		$order->save();
+
+		WC_Helper_Queue::run_all_pending( 'wc-admin-data' );
+
+		$request  = new WP_REST_Request( 'GET', $this->endpoint );
+		$response = $this->server->dispatch( $request );
+		$reports  = $response->get_data();
+		$headers  = $response->get_headers();
+
+		$this->assertEquals( 200, $response->get_status() );
+		$this->assertCount( 1, $reports );
+		$this->assertEquals( 'Jon Snow', $reports[0]['name'] );
+	}
+
+	/**
+	 * Test customer shipping name priority.
+	 */
+	public function test_customer_shipping_name() {
+		wp_set_current_user( $this->user );
+
+		// Test shipping name and empty billing name on a guest account.
+		$order = WC_Helper_Order::create_order( 0 );
+		$order->set_billing_first_name( '' );
+		$order->set_billing_last_name( '' );
+		$order->set_shipping_first_name( 'Daenerys' );
+		$order->set_shipping_last_name( 'Targaryen' );
+		$order->set_status( OrderStatus::COMPLETED );
+		$order->set_total( 100 );
+		$order->save();
+
+		WC_Helper_Queue::run_all_pending( 'wc-admin-data' );
+
+		$request  = new WP_REST_Request( 'GET', $this->endpoint );
+		$response = $this->server->dispatch( $request );
+		$reports  = $response->get_data();
+		$headers  = $response->get_headers();
+
+		$this->assertEquals( 200, $response->get_status() );
+		$this->assertCount( 1, $reports );
+		$this->assertEquals( 'Daenerys Targaryen', $reports[0]['name'] );
+	}
+
+	/**
+	 * Test that bad order params don't cause PHP errors when retrieving customers.
+	 */
+	public function test_customer_retrieval_from_order_bad_order() {
+		$this->assertFalse( CustomersDataStore::get_existing_customer_id_from_order( false ) );
+		$this->assertFalse( CustomersDataStore::get_or_create_customer_from_order( false ) );
+	}
+
+	/**
+	 * Test user deletion.
+	 */
+	public function test_user_deletion() {
+		wp_set_current_user( $this->user );
+
+		// Creating a customer should show up regardless of orders.
+		$customer = WC_Helper_Customer::create_customer( 'deleteme', 'password', 'deleteme@example.com' );
+
+		WC_Helper_Queue::run_all_pending( 'wc-admin-data' );
+
+		$request = new WP_REST_Request( 'GET', $this->endpoint );
+		$request->set_query_params(
+			array(
+				'per_page' => 1,
+			)
+		);
+		$response  = $this->server->dispatch( $request );
+		$customers = $response->get_data();
+
+		$this->assertEquals( 200, $response->get_status() );
+		$this->assertCount( 1, $customers );
+		$this->assertEquals( $customer->get_id(), $customers[0]['user_id'] );
+
+		// Delete the user associated with the customer.
+		wp_delete_user( $customer->get_id() );
+
+		WC_Helper_Queue::run_all_pending( 'wc-admin-data' );
+
+		// Verify they are gone.
+		$request = new WP_REST_Request( 'GET', $this->endpoint );
+		$request->set_query_params(
+			array(
+				'per_page'  => 1,
+				'customers' => array( $customer->get_id() ),
+			)
+		);
+		$response  = $this->server->dispatch( $request );
+		$customers = $response->get_data();
+
+		$this->assertEquals( 200, $response->get_status() );
+		$this->assertCount( 0, $customers );
+	}
+
+	/**
+	 * Test sync order update with customer info.
+	 */
+	public function test_sync_order_customer() {
+		wp_set_current_user( $this->user );
+
+		$order = WC_Helper_Order::create_order( 0 );
+		$order->set_status( OrderStatus::COMPLETED );
+		$order->set_total( 100 );
+		$order->save();
+
+		WC_Helper_Queue::run_all_pending( 'wc-admin-data' );
+
+		// update order info.
+		$order->set_billing_city( 'Random' );
+		$order->set_billing_state( 'FL' );
+		$order->set_billing_postcode( '54321' );
+		$order->set_billing_phone( '555-32123' );
+		$order->set_shipping_phone( '555-99887' );
+		$order->save();
+
+		WC_Helper_Queue::run_all_pending( 'wc-admin-data' );
+
+		$result = CustomersDataStore::sync_order_customer( $order->get_id() );
+
+		WC_Helper_Queue::run_all_pending( 'wc-admin-data' );
+
+		$this->assertNotEquals( -1, $result );
+
+		$request  = new WP_REST_Request( 'GET', $this->endpoint );
+		$response = $this->server->dispatch( $request );
+		$reports  = $response->get_data();
+
+		$this->assertEquals( 200, $response->get_status() );
+		$this->assertTrue( 'Random' === $reports[0]['city'] );
+		$this->assertTrue( 'FL' === $reports[0]['state'] );
+		$this->assertTrue( '54321' === $reports[0]['postcode'] );
+		$this->assertTrue( '555-32123' === $reports[0]['billing_phone'] );
+		$this->assertTrue( '555-99887' === $reports[0]['shipping_phone'] );
+	}
+
+	/**
+	 * @testdox Registered customer sync should populate billing and shipping phone from customer meta.
+	 */
+	public function test_update_registered_customer_syncs_phone_numbers() {
+		wp_set_current_user( $this->user );
+
+		$customer = WC_Helper_Customer::create_customer( 'phonecustomer', 'password', 'phone-customer@example.com' );
+		$customer->set_billing_phone( '555-11223' );
+		$customer->set_shipping_phone( '555-44556' );
+		$customer->save();
+
+		$this->assertNotFalse( CustomersDataStore::update_registered_customer( $customer->get_id() ) );
+
+		WC_Helper_Queue::run_all_pending( 'wc-admin-data' );
+
+		$request = new WP_REST_Request( 'GET', $this->endpoint );
+		$request->set_query_params(
+			array(
+				'search'   => 'phonecustomer',
+				'searchby' => 'username',
+			)
+		);
+		$response = $this->server->dispatch( $request );
+		$reports  = $response->get_data();
+
+		$this->assertEquals( 200, $response->get_status() );
+		$this->assertCount( 1, $reports );
+		$this->assertEquals( '555-11223', $reports[0]['billing_phone'] );
+		$this->assertEquals( '555-44556', $reports[0]['shipping_phone'] );
+	}
+
+	/**
+	 * @testdox Removing order personal data should anonymize the customer's phone numbers in the lookup table.
+	 */
+	public function test_anonymize_customer_erases_phone_numbers() {
+		wp_set_current_user( $this->user );
+
+		$order = WC_Helper_Order::create_order( 0 );
+		$order->set_status( OrderStatus::COMPLETED );
+		$order->set_total( 100 );
+		$order->set_billing_phone( '555-32123' );
+		$order->set_shipping_phone( '555-99887' );
+		$order->save();
+
+		WC_Helper_Queue::run_all_pending( 'wc-admin-data' );
+
+		// Fire the personal-data eraser hook the analytics anonymizer is attached to.
+		do_action( 'woocommerce_privacy_remove_order_personal_data', $order );
+
+		$request  = new WP_REST_Request( 'GET', $this->endpoint );
+		$response = $this->server->dispatch( $request );
+		$reports  = $response->get_data();
+
+		$this->assertEquals( 200, $response->get_status() );
+		$this->assertCount( 1, $reports );
+		$this->assertEquals( '[deleted]', $reports[0]['billing_phone'] );
+		$this->assertEquals( '[deleted]', $reports[0]['shipping_phone'] );
+	}
+
+	/**
+	 * @testdox CSV export should carry the phone columns, and fall back to an empty string for rows cached before the columns existed.
+	 */
+	public function test_export_includes_phone_numbers() {
+		$controller = new \Automattic\WooCommerce\Admin\API\Reports\Customers\Controller();
+
+		$this->assertArrayHasKey( 'billing_phone', $controller->get_export_columns() );
+		$this->assertArrayHasKey( 'shipping_phone', $controller->get_export_columns() );
+
+		$item = array(
+			'name'             => 'Phone Customer',
+			'username'         => 'phonecustomer',
+			'date_last_active' => null,
+			'date_registered'  => null,
+			'email'            => 'phone-customer@example.com',
+			'orders_count'     => 0,
+			'total_spend'      => 0,
+			'avg_order_value'  => 0,
+			'country'          => 'US',
+			'city'             => 'Random',
+			'state'            => 'FL',
+			'postcode'         => '54321',
+		);
+
+		$with_phones = array_merge(
+			$item,
+			array(
+				'billing_phone'  => '555-32123',
+				'shipping_phone' => '555-99887',
+			)
+		);
+
+		$exported = $controller->prepare_item_for_export( $with_phones );
+		$this->assertEquals( '555-32123', $exported['billing_phone'] );
+		$this->assertEquals( '555-99887', $exported['shipping_phone'] );
+
+		// A row served from a report cache written before the columns existed has no phone keys at all.
+		$stale = $controller->prepare_item_for_export( $item );
+		$this->assertSame( '', $stale['billing_phone'] );
+		$this->assertSame( '', $stale['shipping_phone'] );
+
+		// The REST response must still carry the properties its schema declares.
+		$response = $controller->prepare_item_for_response( $item, new WP_REST_Request( 'GET', $this->endpoint ) );
+		$data     = $response->get_data();
+		$this->assertSame( '', $data['billing_phone'] );
+		$this->assertSame( '', $data['shipping_phone'] );
+	}
+
+	/**
+	 * Test sync order update with customer latest order info.
+	 */
+	public function test_sync_latest_order_customer() {
+		wp_set_current_user( $this->user );
+
+		$order = WC_Helper_Order::create_order( 0 );
+		$order->set_status( OrderStatus::COMPLETED );
+		$order->set_total( 100 );
+		$order->save();
+		$order2 = WC_Helper_Order::create_order( 0 );
+		$order2->set_status( OrderStatus::COMPLETED );
+		$order2->set_total( 100 );
+		$order2->save();
+
+		WC_Helper_Queue::run_all_pending( 'wc-admin-data' );
+
+		$customer_id  = CustomersDataStore::get_existing_customer_id_from_order( $order );
+		$customer2_id = CustomersDataStore::get_existing_customer_id_from_order( $order2 );
+		$this->assertEquals( $customer_id, $customer2_id );
+		// update order info.
+		$order->set_billing_city( 'Random' );
+		$order->set_billing_state( 'FL' );
+		$order->set_billing_postcode( '54321' );
+		$order->save();
+
+		WC_Helper_Queue::run_all_pending( 'wc-admin-data' );
+
+		$result = CustomersDataStore::sync_order_customer( $order->get_id() );
+
+		WC_Helper_Queue::run_all_pending( 'wc-admin-data' );
+
+		// Didn't update anything.
+		$this->assertTrue( -1 === $result );
+		$request  = new WP_REST_Request( 'GET', $this->endpoint );
+		$response = $this->server->dispatch( $request );
+		$reports  = $response->get_data();
+
+		$customer_index = array_search( 'admin@example.org', array_column( $reports, 'email' ), true );
+		$this->assertEquals( 200, $response->get_status() );
+		$this->assertNotEquals( 'Random', $reports[ $customer_index ]['city'] );
+		$this->assertNotEquals( 'FL', $reports[ $customer_index ]['state'] );
+		$this->assertNotEquals( '54321', $reports[ $customer_index ]['postcode'] );
+	}
+
+	/**
+	 * Test sync order update with customer latest order info.
+	 */
+	public function test_sync_latest_order_customer_with_multiple_customers() {
+		wp_set_current_user( $this->user );
+
+		$order = WC_Helper_Order::create_order( 0 );
+		$order->set_status( OrderStatus::COMPLETED );
+		$order->set_total( 100 );
+		$order->save();
+		$order2 = WC_Helper_Order::create_order( 0 );
+		$order2->set_status( OrderStatus::COMPLETED );
+		$order2->set_total( 100 );
+		$order2->save();
+		$order3 = WC_Helper_Order::create_order( 0 );
+		$order3->set_status( OrderStatus::COMPLETED );
+		$order3->set_total( 100 );
+		$order3->set_billing_email( 'different@example.org' );
+		$order3->save();
+
+		WC_Helper_Queue::run_all_pending( 'wc-admin-data' );
+
+		$customer_id  = CustomersDataStore::get_existing_customer_id_from_order( $order );
+		$customer2_id = CustomersDataStore::get_existing_customer_id_from_order( $order2 );
+		$customer3_id = CustomersDataStore::get_existing_customer_id_from_order( $order3 );
+		$this->assertEquals( $customer_id, $customer2_id );
+		$this->assertNotEquals( $customer_id, $customer3_id );
+		// update order info.
+		$order3->set_billing_city( 'Random' );
+		$order3->set_billing_state( 'FL' );
+		$order3->set_billing_postcode( '54321' );
+		$order3->save();
+
+		WC_Helper_Queue::run_all_pending( 'wc-admin-data' );
+
+		$result = CustomersDataStore::sync_order_customer( $order3->get_id() );
+
+		WC_Helper_Queue::run_all_pending( 'wc-admin-data' );
+
+		// Didn't update anything.
+		$this->assertNotEquals( -1, $result );
+		$request  = new WP_REST_Request( 'GET', $this->endpoint );
+		$response = $this->server->dispatch( $request );
+		$reports  = $response->get_data();
+
+		$this->assertEquals( 200, $response->get_status() );
+		$first_customer_index  = array_search( 'admin@example.org', array_column( $reports, 'email' ), true );
+		$second_customer_index = array_search( 'different@example.org', array_column( $reports, 'email' ), true );
+		// First customer.
+		$this->assertEquals( 'admin@example.org', $reports[ $first_customer_index ]['email'] );
+		$this->assertNotEquals( 'Random', $reports[ $first_customer_index ]['city'] );
+		$this->assertNotEquals( 'FL', $reports[ $first_customer_index ]['state'] );
+		$this->assertNotEquals( '54321', $reports[ $first_customer_index ]['postcode'] );
+		// Latest customer that should be updated.
+		$this->assertEquals( 'different@example.org', $reports[ $second_customer_index ]['email'] );
+		$this->assertEquals( 'Random', $reports[ $second_customer_index ]['city'] );
+		$this->assertEquals( 'FL', $reports[ $second_customer_index ]['state'] );
+		$this->assertEquals( '54321', $reports[ $second_customer_index ]['postcode'] );
+	}
+
+	/**
+	 * Test that get_or_create_customer_from_order works with a plain WC_Order (not Overrides\Order).
+	 *
+	 * Bug condition: When a plain WC_Order is passed, get_customer_first_name() does not exist,
+	 * causing a fatal error. The fix should convert to Overrides\Order internally.
+	 *
+	 * Validates: Requirements 1.1, 1.2
+	 */
+	public function test_get_or_create_customer_from_plain_wc_order() {
+		// Remove the filter that converts WC_Order to Overrides\Order so we get a plain WC_Order.
+		remove_filter( 'woocommerce_order_class', array( \Automattic\WooCommerce\Admin\Overrides\Order::class, 'order_class_name' ), 10 );
+
+		$order = new \WC_Order();
+		$order->set_billing_first_name( 'Plain' );
+		$order->set_billing_last_name( 'Order' );
+		$order->set_billing_email( 'plain.order@example.com' );
+		$order->set_date_created( time() );
+		$order->save();
+
+		// Restore the filter.
+		add_filter( 'woocommerce_order_class', array( \Automattic\WooCommerce\Admin\Overrides\Order::class, 'order_class_name' ), 10, 3 );
+
+		$customer_id = CustomersDataStore::get_or_create_customer_from_order( $order );
+
+		$this->assertIsInt( $customer_id );
+		$this->assertGreaterThan( 0, $customer_id );
+
+		// Verify the converted order resolved billing names via Overrides\Order.
+		global $wpdb;
+		$table_name = $wpdb->prefix . 'wc_customer_lookup';
+		$record     = $wpdb->get_row(
+			$wpdb->prepare( "SELECT * FROM {$table_name} WHERE customer_id = %d", $customer_id ) // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		);
+
+		$this->assertEquals( 'Plain', $record->first_name );
+		$this->assertEquals( 'Order', $record->last_name );
+		$this->assertEquals( 'plain.order@example.com', $record->email );
+		$this->assertNotNull( $record->date_last_active );
+	}
+
+	/**
+	 * Test that get_or_create_customer_from_order returns false for unsaved orders.
+	 *
+	 * Bug condition: An unsaved order has get_id() === 0. Constructing
+	 * new OverridesOrder( 0 ) returns an empty order, which would write
+	 * a blank customer row.
+	 */
+	public function test_get_or_create_customer_from_unsaved_order() {
+		// Remove the filter that converts WC_Order to Overrides\Order so we get a plain WC_Order.
+		remove_filter( 'woocommerce_order_class', array( \Automattic\WooCommerce\Admin\Overrides\Order::class, 'order_class_name' ), 10 );
+
+		$order = new \WC_Order();
+		$order->set_billing_first_name( 'Unsaved' );
+		$order->set_billing_last_name( 'Order' );
+		$order->set_billing_email( 'unsaved@example.com' );
+		// Do NOT call save() — order has no ID yet.
+
+		$result = CustomersDataStore::get_or_create_customer_from_order( $order );
+
+		$this->assertFalse( $result );
+
+		// Restore the filter.
+		add_filter( 'woocommerce_order_class', array( \Automattic\WooCommerce\Admin\Overrides\Order::class, 'order_class_name' ), 10, 3 );
+	}
+
+	/**
+	 * Test that get_customer_order_data_and_format handles null date_created without fatal.
+	 *
+	 * Bug condition: When get_date_created('edit') returns null, calling ->getTimestamp() on null
+	 * causes a fatal error. The fix should handle null dates gracefully.
+	 *
+	 * Validates: Requirements 1.3
+	 */
+	public function test_get_customer_order_data_with_null_date_created() {
+		$order = new \Automattic\WooCommerce\Admin\Overrides\Order();
+		$order->set_billing_first_name( 'NullDate' );
+		$order->set_billing_last_name( 'Test' );
+		$order->set_billing_email( 'nulldate@example.com' );
+		$order->save();
+
+		// Force all date fields to null after save (simulates edge case / corrupted data).
+		// Since the order is already an OverridesOrder, the instanceof check passes
+		// and no re-instantiation from DB occurs.
+		$order->set_date_created( null );
+		$order->set_date_modified( null );
+
+		// This should not fatal — date_last_active should be null when all dates are null.
+		list( $data, $format ) = CustomersDataStore::get_customer_order_data_and_format( $order );
+
+		$this->assertNull( $data['date_last_active'] );
+	}
+
+	/**
+	 * Test that sync_order_customer handles a non-existent order ID without fatal.
+	 *
+	 * Bug condition: When wc_get_order() returns false for a non-existent order,
+	 * the code proceeds to call methods on false, causing a fatal error.
+	 * The fix should return -1 gracefully.
+	 *
+	 * Validates: Requirements 1.2
+	 */
+	public function test_sync_order_customer_with_nonexistent_order() {
+		// Use a very high order ID that doesn't exist.
+		$result = CustomersDataStore::sync_order_customer( 999999 );
+
+		$this->assertEquals( -1, $result );
+	}
+
+	/**
+	 * Test that get_or_create_customer_from_order preserves correct behavior with Overrides\Order.
+	 *
+	 * Preservation: Overrides\Order with billing name and valid date_created produces
+	 * a customer record with correct first_name, last_name, and date_last_active.
+	 *
+	 * Validates: Requirements 3.1, 3.2
+	 */
+	public function test_overrides_order_customer_creation_preserved() {
+		$order = new \Automattic\WooCommerce\Admin\Overrides\Order();
+		$order->set_billing_first_name( 'Preserved' );
+		$order->set_billing_last_name( 'Customer' );
+		$order->set_billing_email( 'preserved.customer@example.com' );
+		$order->set_date_created( time() );
+		$order->save();
+
+		$customer_id = CustomersDataStore::get_or_create_customer_from_order( $order );
+
+		// Returns an int customer ID.
+		$this->assertIsInt( $customer_id );
+		$this->assertGreaterThan( 0, $customer_id );
+
+		// Verify customer record has correct first_name/last_name (from billing since no user_id).
+		global $wpdb;
+		$table_name = $wpdb->prefix . 'wc_customer_lookup';
+		$record     = $wpdb->get_row(
+			$wpdb->prepare( "SELECT * FROM {$table_name} WHERE customer_id = %d", $customer_id ) // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		);
+
+		$this->assertEquals( 'Preserved', $record->first_name );
+		$this->assertEquals( 'Customer', $record->last_name );
+
+		// date_last_active matches the order's date_created formatted as Y-m-d H:i:s.
+		$expected_date = gmdate( 'Y-m-d H:i:s', $order->get_date_created( 'edit' )->getTimestamp() );
+		$this->assertEquals( $expected_date, $record->date_last_active );
+	}
+
+	/**
+	 * Test that get_or_create_customer_from_order preserves correct behavior with a registered user.
+	 *
+	 * Preservation: Overrides\Order with a registered user produces a customer record
+	 * with correct user_id and username from the WC_Customer.
+	 *
+	 * Validates: Requirements 3.3
+	 */
+	public function test_overrides_order_registered_user_preserved() {
+		// Create a WordPress user to associate with the order.
+		$user_id = wp_insert_user(
+			array(
+				'user_login' => 'preserveduser',
+				'user_pass'  => 'password',
+				'user_email' => 'preserveduser@example.com',
+				'first_name' => 'RegFirst',
+				'last_name'  => 'RegLast',
+				'role'       => 'customer',
+			)
+		);
+
+		$order = new \Automattic\WooCommerce\Admin\Overrides\Order();
+		$order->set_customer_id( $user_id );
+		$order->set_billing_first_name( 'BillingFirst' );
+		$order->set_billing_last_name( 'BillingLast' );
+		$order->set_billing_email( 'preserveduser@example.com' );
+		$order->set_date_created( time() );
+		$order->save();
+
+		$customer_id = CustomersDataStore::get_or_create_customer_from_order( $order );
+
+		// Returns an int customer ID.
+		$this->assertIsInt( $customer_id );
+		$this->assertGreaterThan( 0, $customer_id );
+
+		// Verify customer record has correct user_id and username from WC_Customer.
+		global $wpdb;
+		$table_name = $wpdb->prefix . 'wc_customer_lookup';
+		$record     = $wpdb->get_row(
+			$wpdb->prepare( "SELECT * FROM {$table_name} WHERE customer_id = %d", $customer_id ) // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		);
+
+		$this->assertEquals( $user_id, (int) $record->user_id );
+		$this->assertEquals( 'preserveduser', $record->username );
+	}
+
+	/**
+	 * Test that calling get_or_create_customer_from_order twice for the same order
+	 * returns the same customer_id without creating a duplicate.
+	 *
+	 * Preservation: Existing customer record for same order returns existing customer_id.
+	 *
+	 * Validates: Requirements 3.4
+	 */
+	public function test_existing_customer_not_duplicated() {
+		$order = new \Automattic\WooCommerce\Admin\Overrides\Order();
+		$order->set_billing_first_name( 'NoDupe' );
+		$order->set_billing_last_name( 'Test' );
+		$order->set_billing_email( 'nodupe@example.com' );
+		$order->set_date_created( time() );
+		$order->save();
+
+		$customer_id_first  = CustomersDataStore::get_or_create_customer_from_order( $order );
+		$customer_id_second = CustomersDataStore::get_or_create_customer_from_order( $order );
+
+		// Both calls return the same customer_id (no duplicate created).
+		$this->assertIsInt( $customer_id_first );
+		$this->assertIsInt( $customer_id_second );
+		$this->assertEquals( $customer_id_first, $customer_id_second );
+	}
+
+	/**
+	 * Test get_last_order.
+	 */
+	public function test_get_last_order() {
+		wp_set_current_user( $this->user );
+
+		$order = WC_Helper_Order::create_order( 0 );
+		$order->set_status( OrderStatus::COMPLETED );
+		$order->set_total( 100 );
+		$order->save();
+		$order2 = WC_Helper_Order::create_order( 0 );
+		$order2->set_status( OrderStatus::COMPLETED );
+		$order2->set_total( 100 );
+		$order2->save();
+		$order3 = WC_Helper_Order::create_order( 0 );
+		$order3->set_status( OrderStatus::COMPLETED );
+		$order3->set_total( 100 );
+		$order3->save();
+
+		WC_Helper_Queue::run_all_pending( 'wc-admin-data' );
+
+		$customer_id  = CustomersDataStore::get_existing_customer_id_from_order( $order );
+		$customer2_id = CustomersDataStore::get_existing_customer_id_from_order( $order2 );
+		$customer3_id = CustomersDataStore::get_existing_customer_id_from_order( $order3 );
+		$this->assertEquals( $customer_id, $customer2_id );
+		$this->assertEquals( $customer_id, $customer3_id );
+
+		$latest_order = CustomersDataStore::get_last_order( $customer_id );
+
+		$this->assertEquals( $latest_order->get_id(), $order3->get_id() );
+
+		$order->set_date_created( time() + 60 );
+		$order->save();
+		WC_Helper_Queue::run_all_pending( 'wc-admin-data' );
+
+		$latest_order = CustomersDataStore::get_last_order( $customer_id );
+
+		$this->assertEquals( $latest_order->get_id(), $order->get_id() );
+	}
+}

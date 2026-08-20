@@ -1,0 +1,522 @@
+<?php
+declare( strict_types = 1 );
+
+namespace Automattic\WooCommerce\Tests\Internal\Admin\EmailPreview;
+
+use Automattic\WooCommerce\Internal\Admin\EmailPreview\EmailPreview;
+use Automattic\WooCommerce\Internal\Admin\EmailPreview\PreviewOrder;
+use WC_Emails;
+use WC_Helper_Order;
+use WC_Product;
+use WC_Product_Download;
+use WC_Unit_Test_Case;
+
+/**
+ * EmailPreviewTest test.
+ *
+ * @covers \Automattic\WooCommerce\Internal\Admin\EmailPreview\EmailPreview
+ */
+class EmailPreviewTest extends WC_Unit_Test_Case {
+	/**
+	 * Site title.
+	 *
+	 * @var string
+	 */
+	const SITE_TITLE = 'Test Blog';
+
+	/**
+	 * Email type option key for default preview email.
+	 *
+	 * @var string
+	 */
+	const DEFAULT_EMAIL_TYPE_KEY = 'woocommerce_' . EmailPreview::DEFAULT_EMAIL_ID . '_email_type';
+
+	/**
+	 * "System Under Test", an instance of the class to be tested.
+	 *
+	 * @var EmailPreview
+	 */
+	private $sut;
+
+	/**
+	 * Set up.
+	 */
+	public function setUp(): void {
+		parent::setUp();
+		update_option( 'woocommerce_feature_email_improvements_enabled', 'yes' );
+		$this->sut = new EmailPreview();
+		new WC_Emails();
+	}
+
+	/**
+	 * Tear down.
+	 */
+	public function tearDown(): void {
+		parent::tearDown();
+		update_option( 'woocommerce_feature_email_improvements_enabled', 'no' );
+	}
+
+	/**
+	 * Tests that it returns processing order email preview.
+	 */
+	public function test_it_returns_order_email_preview() {
+		$message       = $this->sut->render();
+		$order_title   = 'Thank you for your order';
+		$order_content = 'Just to let you know — we’ve received your order, and it is now being processed.';
+		$order_product = 'Dummy Product';
+		$this->assertStringContainsString( $order_title, $message );
+		$this->assertStringContainsString( $order_content, $message );
+		$this->assertStringContainsString( $order_product, $message );
+	}
+
+	/**
+	 * Tests that it renders HTML email.
+	 */
+	public function test_it_renders_html_email() {
+		set_transient( self::DEFAULT_EMAIL_TYPE_KEY, 'html', HOUR_IN_SECONDS );
+		$message = $this->sut->render();
+		$this->assertStringContainsString( '<html', $message );
+		$this->assertStringContainsString( '<table', $message );
+		delete_transient( self::DEFAULT_EMAIL_TYPE_KEY );
+	}
+
+	/**
+	 * Tests that it renders plain text email.
+	 */
+	public function test_it_renders_plain_text_email() {
+		set_transient( self::DEFAULT_EMAIL_TYPE_KEY, 'plain', HOUR_IN_SECONDS );
+		$message = $this->sut->render();
+		$this->assertStringNotContainsString( '<html', $message );
+		$this->assertStringNotContainsString( '<table', $message );
+		delete_transient( self::DEFAULT_EMAIL_TYPE_KEY );
+	}
+
+	/**
+	 * Test handling of invalid email type.
+	 */
+	public function test_invalid_email_type() {
+		$this->expectException( \InvalidArgumentException::class );
+		$this->sut->set_email_type( 'Invalid_Email_Type' );
+	}
+
+	/**
+	 * Test setting the email type.
+	 */
+	public function test_set_email_type() {
+		$this->expectNotToPerformAssertions();
+		$this->sut->set_email_type( EmailPreview::DEFAULT_EMAIL_TYPE );
+	}
+
+	/**
+	 * Test that get_subject() returns empty when no email is set.
+	 */
+	public function test_get_subject_without_email() {
+		$this->assertEmpty( $this->sut->get_subject() );
+	}
+
+	/**
+	 * Test that get_subject() returns a subject when email is set.
+	 */
+	public function test_get_subject_with_email_set() {
+		$this->sut->set_email_type( EmailPreview::DEFAULT_EMAIL_TYPE );
+		$subject = $this->sut->get_subject();
+		$this->assertNotEmpty( $subject );
+		$this->assertEquals( 'Your ' . self::SITE_TITLE . ' order has been received!', $subject );
+	}
+
+	/**
+	 * Test that placeholders are replaced in the subject.
+	 */
+	public function test_placeholder_replacement_in_subject() {
+		$this->sut->set_email_type( 'WC_Email_Cancelled_Order' );
+		$subject = $this->sut->get_subject();
+		// {site_title} placeholder
+		$this->assertStringContainsString( self::SITE_TITLE, $subject );
+		// {order_number} placeholder
+		$this->assertStringContainsString( '12345', $subject );
+
+		$this->sut->set_email_type( 'WC_Email_Customer_Note' );
+		$subject = $this->sut->get_subject();
+		// {order_date} placeholder
+		$this->assertStringContainsString( wc_format_datetime( new \WC_DateTime() ), $subject );
+	}
+
+	/**
+	 * Test get_dummy_product_when_not_set returns dummy product if null is passed.
+	 */
+	public function test_get_dummy_product_when_not_set() {
+		$dummy_product = $this->sut->get_dummy_product_when_not_set( null );
+		$this->assertInstanceOf( WC_Product::class, $dummy_product );
+		$this->assertEquals( 'Dummy Product', $dummy_product->get_name() );
+	}
+
+	/**
+	 * Test dummy product filter - woocommerce_email_preview_dummy_product
+	 */
+	public function test_dummy_product_filter() {
+		$product_filter = function ( $product ) {
+			$product->set_name( 'Filtered Product' );
+			$product->set_price( 99 );
+			return $product;
+		};
+		add_filter( 'woocommerce_email_preview_dummy_product', $product_filter, 10, 1 );
+		$product = $this->sut->get_dummy_product_when_not_set( null );
+		$this->assertEquals( 'Filtered Product', $product->get_name() );
+		$this->assertEquals( '99', $product->get_price() );
+		remove_filter( 'woocommerce_email_preview_dummy_product', $product_filter, 10 );
+	}
+
+	/**
+	 * Test dummy order filter - woocommerce_email_preview_dummy_order
+	 */
+	public function test_dummy_order_filter() {
+		$order_filter = function ( $order ) {
+			$order->set_total( 500 );
+			return $order;
+		};
+		add_filter( 'woocommerce_email_preview_dummy_order', $order_filter, 10, 1 );
+
+		$content = $this->sut->render();
+		$this->assertStringContainsString( '500.00', $content );
+		$this->assertStringNotContainsString( '100.00', $content );
+
+		remove_filter( 'woocommerce_email_preview_dummy_order', $order_filter, 10 );
+	}
+
+	/**
+	 * @testdox Email preview shipping details can be hidden.
+	 */
+	public function test_shipping_details_filter_can_hide_preview_shipping_details(): void {
+		$captured_order = null;
+		$captured_args  = null;
+		$hide_shipping  = function ( $show_shipping_details, $order, $email_type ) use ( &$captured_args ) {
+			$captured_args = array( $show_shipping_details, $order, $email_type );
+			return false;
+		};
+		$capture_order  = function ( $order ) use ( &$captured_order ) {
+			$captured_order = $order;
+			return $order;
+		};
+		add_filter( 'woocommerce_email_preview_show_shipping_details', $hide_shipping, 10, 3 );
+		add_filter( 'woocommerce_email_preview_dummy_order', $capture_order, 10, 1 );
+
+		$content = $this->sut->render();
+
+		remove_filter( 'woocommerce_email_preview_show_shipping_details', $hide_shipping, 10 );
+		remove_filter( 'woocommerce_email_preview_dummy_order', $capture_order, 10 );
+
+		$this->assertInstanceOf( PreviewOrder::class, $captured_order );
+		$this->assertSame( array(), $captured_order->get_shipping_methods(), 'Hidden preview shipping details should remove the dummy shipping method.' );
+		$this->assertSame( '0', $captured_order->get_shipping_total(), 'Hidden preview shipping details should remove the dummy shipping total.' );
+		$this->assertSame( '', $captured_order->get_shipping_address_1(), 'Hidden preview shipping details should remove the dummy shipping address.' );
+		$this->assertSame( array( true, $captured_order, EmailPreview::DEFAULT_EMAIL_TYPE ), $captured_args, 'Filter should receive the default visibility, preview order, and email type.' );
+		$this->assertStringNotContainsString( 'Flat rate', $content, 'Hidden preview shipping details should not render the dummy shipping method.' );
+		$this->assertStringNotContainsString( 'Shipping address', $content, 'Hidden preview shipping details should not render the shipping address section.' );
+	}
+
+	/**
+	 * Test dummy address filter - woocommerce_email_preview_dummy_address
+	 */
+	public function test_dummy_address_filter() {
+		$address_filter = function ( $address ) {
+			$address['first_name'] = 'Jane';
+			$address['last_name']  = 'Smith';
+			return $address;
+		};
+		add_filter( 'woocommerce_email_preview_dummy_address', $address_filter, 10, 1 );
+
+		$content = $this->sut->render();
+		$this->assertStringContainsString( 'Jane Smith', $content );
+		$this->assertStringNotContainsString( 'John Doe', $content );
+
+		remove_filter( 'woocommerce_email_preview_dummy_address', $address_filter, 10 );
+	}
+
+	/**
+	 * Test that placeholders can be modified via `woocommerce_email_preview_placeholders`.
+	 */
+	public function test_placeholder_filter() {
+		$placeholders_filter = function ( $placeholders ) {
+			$placeholders['{order_number}'] = '98765';
+			return $placeholders;
+		};
+		add_filter( 'woocommerce_email_preview_placeholders', $placeholders_filter, 10, 1 );
+
+		$this->sut->set_email_type( 'WC_Email_Cancelled_Order' );
+		$subject = $this->sut->get_subject();
+		$this->assertStringContainsString( '98765', $subject );
+		$this->assertStringNotContainsString( '12345', $subject );
+
+		remove_filter( 'woocommerce_email_preview_placeholders', $placeholders_filter, 10 );
+	}
+
+	/**
+	 * Test that the `woocommerce_prepare_email_for_preview` filter is applied.
+	 */
+	public function test_prepare_email_for_preview_filter() {
+		$email_filter = function ( $email ) {
+			$new_email                      = clone $email;
+			$new_email->settings['subject'] = 'Filtered Subject {order_number}';
+			return $new_email;
+		};
+		add_filter( 'woocommerce_prepare_email_for_preview', $email_filter, 10, 1 );
+
+		$this->sut->set_email_type( EmailPreview::DEFAULT_EMAIL_TYPE );
+		$subject = $this->sut->get_subject();
+		$this->assertStringContainsString( 'Filtered Subject 12345', $subject );
+		$this->assertStringNotContainsString( 'Your ' . self::SITE_TITLE . ' order has been received!', $subject );
+
+		remove_filter( 'woocommerce_prepare_email_for_preview', $email_filter, 10 );
+	}
+
+	/**
+	 * @testdox Email preview provides dummy product files as download objects.
+	 */
+	public function test_provide_dummy_product_file_returns_download_object_in_preview(): void {
+		add_filter( 'woocommerce_is_email_preview', '__return_true' );
+
+		$file = $this->sut->provide_dummy_product_file( null );
+
+		remove_filter( 'woocommerce_is_email_preview', '__return_true' );
+
+		$this->assertInstanceOf( WC_Product_Download::class, $file );
+		$this->assertSame( 'Sample Download File.pdf', $file->get_name() );
+		$this->assertSame( 'sample-download.pdf', $file->get_file() );
+	}
+
+	/**
+	 * @testdox Email preview downloadable items ignore downloads resolved from the dummy order.
+	 */
+	public function test_get_dummy_downloadable_items_returns_only_preview_downloads(): void {
+		$downloads = array(
+			array(
+				'product_name'   => 'Unexpected Dummy Product',
+				'product_id'     => 0,
+				'download_url'   => 'https://example.com/unexpected',
+				'download_name'  => 'Unexpected Download.pdf',
+				'access_expires' => time() + DAY_IN_SECONDS,
+			),
+		);
+
+		try {
+			$this->sut->set_up_filters();
+			/**
+			 * Filters the list of downloadable items for an order.
+			 *
+			 * @since 3.2.0
+			 *
+			 * @param array    $downloads Downloadable items.
+			 * @param WC_Order $order     Order object.
+			 */
+			$result = apply_filters( 'woocommerce_order_get_downloadable_items', $downloads, new PreviewOrder() );
+		} finally {
+			$this->sut->clean_up_filters();
+		}
+
+		$this->assertCount( 1, $result, 'Existing downloads from dummy order permission records must not be merged into preview output.' );
+		$this->assertSame( 'Sample Download File.pdf', $result[0]['download_name'], 'Preview output should keep the synthetic downloadable item.' );
+	}
+
+	/**
+	 * Test that downloadable product appears in email content.
+	 */
+	public function test_downloadable_product_in_email_content() {
+		$this->sut->set_email_type( 'WC_Email_Customer_Completed_Order' );
+		$content = $this->sut->render();
+
+		// Check that downloadable product appears in the content.
+		$this->assertStringContainsString( 'Dummy Downloadable Product', $content );
+
+		// Check total is updated to include downloadable product ($50 + $20 + $15 + $5 shipping - $10 discount = $80).
+		$this->assertStringContainsString( '80.00', $content );
+
+		// Downloads section is added by email filters and should be available when conditions are met.
+		// Note: Downloads may not appear in all email types, but the functionality is properly implemented.
+	}
+
+	/**
+	 * Test dummy downloadable product filter - woocommerce_email_preview_dummy_downloadable_product
+	 */
+	public function test_dummy_downloadable_product_filter() {
+		$downloadable_product_filter = function ( $product ) {
+			$product->set_name( 'Filtered Downloadable Product' );
+			$product->set_price( 99 );
+			return $product;
+		};
+		add_filter( 'woocommerce_email_preview_dummy_downloadable_product', $downloadable_product_filter, 10, 1 );
+
+		$this->sut->set_email_type( 'WC_Email_Customer_Completed_Order' );
+		$content = $this->sut->render();
+		$this->assertStringContainsString( 'Filtered Downloadable Product', $content );
+
+		remove_filter( 'woocommerce_email_preview_dummy_downloadable_product', $downloadable_product_filter, 10 );
+	}
+
+	/**
+	 * Test that transient values are applied in email preview
+	 */
+	public function test_transient_values_in_preview() {
+		$original_value = get_option( EmailPreview::get_email_style_setting_ids()[0] );
+		update_option( EmailPreview::get_email_style_setting_ids()[0], 'option_value' );
+		set_transient( EmailPreview::get_email_style_setting_ids()[0], 'transient_value', HOUR_IN_SECONDS );
+
+		$this->sut->set_email_type( EmailPreview::DEFAULT_EMAIL_TYPE );
+		$content = $this->sut->render();
+
+		$this->assertStringNotContainsString( 'option_value', $content );
+		$this->assertStringContainsString( 'transient_value', $content );
+
+		update_option( EmailPreview::get_email_style_setting_ids()[0], $original_value );
+		delete_transient( EmailPreview::get_email_style_setting_ids()[0] );
+	}
+
+	/**
+	 * Test that transient values are applied in subject
+	 */
+	public function test_transient_values_in_subject() {
+		$email_id = EmailPreview::DEFAULT_EMAIL_ID;
+		$key      = "woocommerce_{$email_id}_subject";
+
+		$this->sut->set_email_type( EmailPreview::DEFAULT_EMAIL_TYPE );
+		$this->assertEquals( $this->sut->get_subject(), 'Your ' . self::SITE_TITLE . ' order has been received!' );
+
+		set_transient( $key, 'transient_subject', HOUR_IN_SECONDS );
+		$this->assertEquals( $this->sut->get_subject(), 'transient_subject' );
+		delete_transient( $key );
+	}
+
+	/**
+	 * Test that transient values are applied in email content
+	 */
+	public function test_transient_values_in_email_content() {
+		$email_id         = EmailPreview::DEFAULT_EMAIL_ID;
+		$heading_key      = "woocommerce_{$email_id}_heading";
+		$additional_key   = "woocommerce_{$email_id}_additional_content";
+		$heading_value    = get_option( $heading_key );
+		$additional_value = get_option( $additional_key );
+
+		update_option( $heading_key, 'option_value_heading' );
+		set_transient( $heading_key, 'transient_value_heading', HOUR_IN_SECONDS );
+		update_option( $additional_key, 'option_value_additional' );
+		set_transient( $additional_key, 'transient_value_additional', HOUR_IN_SECONDS );
+
+		$this->sut->set_email_type( EmailPreview::DEFAULT_EMAIL_TYPE );
+		$content = $this->sut->render();
+
+		$this->assertStringNotContainsString( 'option_value_heading', $content );
+		$this->assertStringNotContainsString( 'option_value_additional', $content );
+		$this->assertStringContainsString( 'transient_value_heading', $content );
+		$this->assertStringContainsString( 'transient_value_additional', $content );
+
+		update_option( $heading_key, $heading_value );
+		update_option( $additional_key, $additional_value );
+		delete_transient( $heading_key );
+		delete_transient( $additional_key );
+	}
+
+	/**
+	 * @testdox Calling save() on the preview dummy order must not overwrite a real order whose id matches the dummy's.
+	 */
+	public function test_dummy_order_save_does_not_overwrite_real_order(): void {
+		$real_order = WC_Helper_Order::create_order();
+		$real_id    = $real_order->get_id();
+		$real_order->set_billing_first_name( 'Real' );
+		$real_order->set_billing_last_name( 'Customer' );
+		$real_order->set_total( 999 );
+		$real_order->save();
+
+		$snapshot = array(
+			'first_name' => $real_order->get_billing_first_name(),
+			'last_name'  => $real_order->get_billing_last_name(),
+			'total'      => $real_order->get_total(),
+			'status'     => $real_order->get_status(),
+		);
+
+		$listener = function ( $order ) use ( $real_id ) {
+			$order->set_id( $real_id );
+			$order->set_billing_first_name( 'Pwned' );
+			$order->set_billing_last_name( 'Pwned' );
+			$order->set_total( 1 );
+			$order->save();
+			return $order;
+		};
+		add_filter( 'woocommerce_email_preview_dummy_order', $listener );
+
+		$this->sut->render();
+
+		remove_filter( 'woocommerce_email_preview_dummy_order', $listener );
+
+		$reloaded = wc_get_order( $real_id );
+		$this->assertSame( $snapshot['first_name'], $reloaded->get_billing_first_name(), 'Billing first name must be unchanged.' );
+		$this->assertSame( $snapshot['last_name'], $reloaded->get_billing_last_name(), 'Billing last name must be unchanged.' );
+		$this->assertSame( $snapshot['total'], $reloaded->get_total(), 'Order total must be unchanged.' );
+		$this->assertSame( $snapshot['status'], $reloaded->get_status(), 'Order status must be unchanged.' );
+	}
+
+	/**
+	 * @testdox Reading meta on the preview dummy order must not leak real order meta from the database.
+	 */
+	public function test_dummy_order_does_not_leak_real_order_meta(): void {
+		$real_order = WC_Helper_Order::create_order();
+		$real_id    = $real_order->get_id();
+		$real_order->update_meta_data( '_secret_value', 'do-not-leak' );
+		$real_order->save();
+
+		$captured = 'sentinel';
+		$listener = function ( $order ) use ( $real_id, &$captured ) {
+			$order->set_id( $real_id );
+			$captured = $order->get_meta( '_secret_value' );
+			return $order;
+		};
+		add_filter( 'woocommerce_email_preview_dummy_order', $listener );
+
+		$content = $this->sut->render();
+
+		remove_filter( 'woocommerce_email_preview_dummy_order', $listener );
+
+		$this->assertSame( '', $captured, 'Preview dummy must not lazy-load meta from the orders table.' );
+		$this->assertStringNotContainsString( 'do-not-leak', $content, 'Real order meta must not appear in the rendered preview.' );
+	}
+
+	/**
+	 * @testdox PreviewOrder save() is a no-op and does not insert a row when id is unset.
+	 */
+	public function test_preview_order_save_is_noop(): void {
+		$order = new PreviewOrder();
+		$order->set_billing_first_name( 'Phantom' );
+		$order->save();
+
+		$this->assertSame( 0, $order->get_id(), 'PreviewOrder must not be assigned a real database id on save().' );
+	}
+
+	/**
+	 * @testdox PreviewOrder keeps its id at 0 but still shows a representative order number.
+	 */
+	public function test_preview_order_displays_number_without_a_real_id(): void {
+		$order = new PreviewOrder();
+
+		$this->assertSame( 0, $order->get_id(), 'PreviewOrder must not carry a real order id.' );
+		$this->assertSame( '12345', $order->get_order_number(), 'PreviewOrder must expose a display order number.' );
+	}
+
+	/**
+	 * @testdox PreviewOrder database methods that key off the order id are inert.
+	 */
+	public function test_preview_order_database_methods_are_inert(): void {
+		$real_order = WC_Helper_Order::create_order();
+		$real_order->add_order_note( 'Customer note', 1 );
+		$real_order->save();
+		wc_create_refund(
+			array(
+				'order_id' => $real_order->get_id(),
+				'amount'   => 5,
+			)
+		);
+
+		$order = new PreviewOrder();
+
+		$this->assertSame( 0, $order->add_order_note( 'Preview note' ), 'add_order_note() must not write a note.' );
+		$this->assertSame( array(), $order->get_refunds(), 'get_refunds() must not read refunds from the database.' );
+		$this->assertSame( array(), $order->get_customer_order_notes(), 'get_customer_order_notes() must not read notes from the database.' );
+	}
+}

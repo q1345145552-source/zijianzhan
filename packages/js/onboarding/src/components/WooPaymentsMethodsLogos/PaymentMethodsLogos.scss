@@ -1,0 +1,104 @@
+.woocommerce-woopayments-payment-methods-logos {
+	display: flex;
+	align-items: center;
+	padding: $gap-small 0;
+	gap: $gap-smaller;
+
+	img {
+		width: 38px;
+		height: 24px;
+		// Elements without background get a border
+		&:not(.has-background) {
+			border: 1px solid $gray-100;
+		}
+		// Elements with background get extra 2px in dimensions to match bordered elements
+		&.has-background {
+			width: 40px;
+			height: 26px;
+		}
+		border-radius: 3px;
+	}
+
+	&-count {
+		width: 38px;
+		height: 24px;
+		// Carries the same 2px as the bordered logos so the badge matches their
+		// 40x26 footprint, and gives the hover border something to paint on.
+		border: 1px solid transparent;
+		background-color: rgba($gray-700, 0.10);
+		color: $gray-900;
+		text-align: center;
+		line-height: 24px;
+		border-radius: 3px;
+		font-size: 11px;
+		font-weight: 600;
+	}
+
+	&-count:hover {
+		cursor: pointer;
+		// Hold the label at $gray-900 rather than the theme colour: the tint below is
+		// derived from that same colour, so theming both drops the pair under 4.5:1 on
+		// the lighter schemes (2.48:1 on Sunrise). Only the tint and border follow the theme.
+		color: $gray-900;
+		background-color: rgba(var(--wp-admin-theme-color--rgb, 56, 88, 233), 0.15);
+		border-color: var(--wp-admin-theme-color, #3858e9);
+	}
+
+	&-count:focus {
+		outline: 2px solid var(--wp-admin-theme-color, #007cba);
+		outline-offset: 1px;
+	}
+
+	&-count:focus:not(:focus-visible) {
+		outline: none;
+	}
+
+	&-count:focus-visible {
+		outline: 2px solid var(--wp-admin-theme-color, #007cba);
+		outline-offset: 1px;
+	}
+}
+
+.wc_payment_gateways_wrapper [data-gateway_id="pre_install_woocommerce_payments_promotion"] {
+	.woocommerce-woopayments-payment-methods-logos {
+		padding: 0;
+	}
+
+	@media only screen and (max-width: 768px) {
+		.wc-payment-gateway-method__name {
+			display: block;
+		}
+		.pre-install-payment-gateway__subtitle {
+			margin-left: 0;
+		}
+	}
+}
+
+.woocommerce-woopayments-payment-methods-logos-popover {
+	.components-popover__content {
+		background: $white;
+		border: 1px solid $gray-100;
+		border-radius: 3px;
+		max-width: 255px;
+		padding: $gap-smaller;
+		box-shadow: none;
+		margin-bottom: $gap-smaller;
+
+		a {
+			outline: none;
+			text-decoration: none;
+
+			&:focus {
+				box-shadow: none;
+			}
+		}
+	}
+
+	.woocommerce-woopayments-payment-methods-logos {
+		display: grid;
+		grid-template-columns: repeat(4, 1fr);
+		grid-template-rows: repeat(3, 1fr);
+		gap: $gap-smaller;
+		padding: 0px;
+	}
+}

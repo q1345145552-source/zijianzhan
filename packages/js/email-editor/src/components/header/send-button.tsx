@@ -1,0 +1,70 @@
+/**
+ * External dependencies
+ */
+import { __ } from '@wordpress/i18n';
+import { Button } from '@wordpress/components';
+import { applyFilters } from '@wordpress/hooks';
+import { useSelect } from '@wordpress/data';
+import { useEntitiesSavedStatesIsDirty } from '@wordpress/editor';
+
+/**
+ * Internal dependencies
+ */
+import { storeName } from '../../store';
+import { recordEvent } from '../../events';
+
+export function SendButton() {
+	const { isDirty } = useEntitiesSavedStatesIsDirty() as {
+		isDirty: boolean;
+	};
+
+	const { hasEmptyContent, isEmailSent, urls } = useSelect(
+		( select ) => ( {
+			hasEmptyContent: select( storeName ).hasEmptyContent(),
+			isEmailSent: select( storeName ).isEmailSent(),
+			urls: select( storeName ).getUrls(),
+		} ),
+		[]
+	);
+
+	function sendAction() {
+		if ( urls.send ) {
+			window.location.href = urls.send;
+		}
+	}
+
+	const defaultIsDisabled = hasEmptyContent || isEmailSent || isDirty;
+	const filteredIsDisabled = applyFilters(
+		'woocommerce_email_editor_send_button_disabled',
+		defaultIsDisabled,
+		{ hasEmptyContent, isEmailSent, isDirty }
+	);
+	const isDisabled =
+		typeof filteredIsDisabled === 'boolean'
+			? filteredIsDisabled
+			: defaultIsDisabled;
+
+	const label = applyFilters(
+		'woocommerce_email_editor_send_button_label',
+		__( 'Send', __i18n_text_domain__ )
+	) as string;
+
+	return (
+		<Button
+			variant="primary"
+			size="compact"
+			onClick={ () => {
+				recordEvent( 'header_send_button_clicked' );
+				const action = applyFilters(
+					'woocommerce_email_editor_send_action_callback',
+					sendAction
+				) as () => void;
+				action();
+			} }
+			disabled={ isDisabled }
+			data-automation-id="email_editor_send_button"
+		>
+			{ label }
+		</Button>
+	);
+}
