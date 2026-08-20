@@ -1956,3 +1956,28 @@ a {
 		padding-inline: 0 !important;
 	}
 }
+
+/* ============================================
+   移动端：商品页/详情页对称留白修复
+   ============================================ */
+
+@media (max-width: 767px) {
+	/* 商店页商品网格：box-sizing 修复，左右对称 8px */
+	ul.wc-block-product-template {
+		box-sizing: border-box !important;
+		width: 100% !important;
+		padding-inline: 8px !important;
+	}
+
+	/* 商品详情页：整体对称 16px 边距（含图片区） */
+	body.single-product main.wp-block-group,
+	body.single-product main.is-layout-constrained,
+	body.single-product main > .wp-block-group {
+		padding-inline: 16px !important;
+	}
+	body.single-product .woocommerce-product-gallery {
+		margin-inline: 0 !important;
+		width: auto !important;
+		max-width: none !important;
+	}
+}
