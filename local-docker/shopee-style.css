@@ -1659,12 +1659,12 @@ a {
    ============================================ */
 
 @media (max-width: 767px) {
-	/* 网格容器：2 列铺满 */
+	/* 网格容器：铺满屏宽，列数交给 WooCommerce 响应式（auto-fill） */
 	ul.wc-block-product-template,
 	ul.wc-block-grid__products {
 		display: grid !important;
-		grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-		gap: 8px !important;
+		width: 100% !important;
+		max-width: none !important;
 		margin: 0 !important;
 		padding: 0 8px 8px !important;
 		list-style: none !important;
@@ -1807,5 +1807,152 @@ a {
 		border-radius: 2px !important;
 		background: var(--sp-primary, #ee4d2d) !important;
 		color: #fff !important;
+	}
+}
+
+/* ============================================
+   移动端：突破全局 padding，商品网格铺满屏幕
+   ============================================ */
+
+@media (max-width: 767px) {
+	/* 商店页 main 内容容器：去掉全局 padding */
+	main.wp-block-group.has-global-padding,
+	main.is-layout-constrained,
+	.wp-block-post-content.is-layout-constrained {
+		padding-inline: 0 !important;
+	}
+
+	/* 商品网格：铺满屏宽（仅留 8px 边距） */
+	ul.wc-block-product-template,
+	ul.wc-block-grid__products {
+		width: 100% !important;
+		max-width: none !important;
+		margin-inline: 0 !important;
+		padding-inline: 8px !important;
+	}
+
+	/* 面包屑、结果计数等也铺满 */
+	main .wc-block-breadcrumbs,
+	main .woocommerce-breadcrumb,
+	.wc-block-product-results-count,
+	.woocommerce-result-count {
+		padding-inline: 12px !important;
+		margin-inline: 0 !important;
+	}
+
+	/* 商店页标题 */
+	main .wp-block-query-title,
+	main .woocommerce-products-header__title {
+		padding-inline: 12px !important;
+	}
+}
+
+/* ============================================
+   移动端：修复商品卡列宽不均（图片撑开 grid）
+   ============================================ */
+
+@media (max-width: 767px) {
+	ul.wc-block-product-template,
+	ul.wc-block-grid__products {
+		grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+	}
+
+	/* grid 项允许收缩到 0 */
+	ul.wc-block-product-template > *,
+	ul.wc-block-grid__products > * {
+		min-width: 0 !important;
+		max-width: 100% !important;
+	}
+
+	/* 图片完全自适应列宽 */
+	li.wc-block-product .wc-block-components-product-image,
+	li.wc-block-product .wc-block-components-product-image__inner-container,
+	li.wc-block-product .wc-block-components-product-image img {
+		width: 100% !important;
+		max-width: 100% !important;
+		min-width: 0 !important;
+		height: auto !important;
+	}
+	li.wc-block-product .wc-block-components-product-image img {
+		aspect-ratio: 1;
+		object-fit: cover;
+	}
+
+	/* 标题文字防溢出 */
+	li.wc-block-product .wp-block-post-title,
+	li.wc-block-product .wp-block-post-title a {
+		overflow-wrap: break-word;
+		word-break: break-word;
+		min-width: 0;
+	}
+}
+
+/* ============================================
+   移动端：强制 grid 项内容可收缩（修复列宽不均）
+   ============================================ */
+
+@media (max-width: 767px) {
+	ul.wc-block-product-template > li.wc-block-product,
+	ul.wc-block-product-template > li.wc-block-product * {
+		min-width: 0 !important;
+		max-width: 100% !important;
+	}
+	ul.wc-block-product-template > li.wc-block-product img {
+		width: 100% !important;
+		height: auto !important;
+		aspect-ratio: 1 !important;
+		object-fit: cover !important;
+	}
+	/* 用 flex 强制 2 列（最可靠，不依赖 grid 轨道计算） */
+	ul.wc-block-product-template.wc-block-product-template__responsive,
+	ul.wc-block-product-template {
+		display: flex !important;
+		flex-wrap: wrap !important;
+		gap: 8px !important;
+	}
+	ul.wc-block-product-template > li.wc-block-product {
+		flex: 0 0 calc(50% - 4px) !important;
+		width: calc(50% - 4px) !important;
+		max-width: calc(50% - 4px) !important;
+	}
+}
+
+/* ============================================
+   移动端：修复首页模板负偏移（商品出屏）
+   ============================================ */
+
+@media (max-width: 767px) {
+	/* 消除 mall-storefront 的负 margin 偏移 */
+	.mall-storefront {
+		inset-inline-start: 0 !important;
+		margin-inline: 0 !important;
+		width: 100% !important;
+	}
+	/* 商品网格回到视口内 */
+	.mall-product-section {
+		margin-inline: 0 !important;
+		width: 100% !important;
+		max-width: none !important;
+		padding-inline: 8px !important;
+	}
+	.mall-product-section ul.products {
+		margin-inline: 0 !important;
+		width: 100% !important;
+		max-width: none !important;
+	}
+}
+
+/* ============================================
+   移动端：修复 post-content alignfull 负边距
+   ============================================ */
+
+@media (max-width: 767px) {
+	.entry-content.alignfull.wp-block-post-content,
+	.wp-block-post-content.alignfull,
+	main > .wp-block-group.alignfull.has-global-padding {
+		margin-inline: 0 !important;
+		width: 100% !important;
+		max-width: none !important;
+		padding-inline: 0 !important;
 	}
 }
