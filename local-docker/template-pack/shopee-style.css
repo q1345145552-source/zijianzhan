@@ -1981,3 +1981,119 @@ a {
 		max-width: none !important;
 	}
 }
+
+/* ============================================
+   移动端：购物车 + 结账页完整适配
+   ============================================ */
+
+@media (max-width: 767px) {
+	/* 购物车/结账页整体对称留白 */
+	body.woocommerce-cart main,
+	body.woocommerce-checkout main,
+	body.woocommerce-cart main.wp-block-group,
+	body.woocommerce-checkout main.wp-block-group {
+		padding-inline: 16px !important;
+	}
+
+	/* 购物车商品行：图片左 信息右 */
+	.wc-block-cart-item {
+		display: flex !important;
+		gap: 12px !important;
+		align-items: flex-start !important;
+		flex-wrap: nowrap !important;
+	}
+	.wc-block-cart-item__image {
+		flex: 0 0 76px !important;
+	}
+	.wc-block-cart-item__image img {
+		width: 76px !important;
+		height: 76px !important;
+		object-fit: cover;
+		border-radius: 8px !important;
+	}
+	.wc-block-cart-item__product {
+		flex: 1 1 auto !important;
+		min-width: 0 !important;
+	}
+	.wc-block-cart-item__product-name a {
+		font-size: 13px !important;
+		line-height: 1.4 !important;
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+		overflow: hidden;
+	}
+	.wc-block-cart-item__prices .wc-block-components-product-price__value {
+		font-size: 14px !important;
+	}
+	.wc-block-cart-item__wrap {
+		display: flex !important;
+		align-items: center !important;
+		gap: 8px !important;
+		flex-wrap: wrap;
+	}
+
+	/* 数量选择器 */
+	.wc-block-components-quantity-selector {
+		min-height: 32px !important;
+		max-width: 110px !important;
+	}
+	.wc-block-components-quantity-selector__button {
+		width: 32px !important;
+		height: 32px !important;
+	}
+	.wc-block-components-quantity-selector__input {
+		width: 38px !important;
+		height: 32px !important;
+	}
+
+	/* 合计区 */
+	.wc-block-cart__totals {
+		padding: 16px !important;
+	}
+	.wc-block-cart__totals-title {
+		font-size: 16px !important;
+	}
+	.wc-block-cart__submit-button {
+		padding: 14px !important;
+		font-size: 15px !important;
+	}
+
+	/* 结账页：主区 + 侧栏垂直堆叠 */
+	.wc-block-checkout__main,
+	.wc-block-checkout__sidebar {
+		width: 100% !important;
+		float: none !important;
+		margin: 0 0 16px !important;
+	}
+
+	/* 结账表单字段：全宽 + 触控友好 */
+	.wc-block-checkout .form-row,
+	.wc-block-components-form .form-row,
+	.wc-block-checkout__form .form-row {
+		width: 100% !important;
+		float: none !important;
+		margin-right: 0 !important;
+	}
+	.wc-block-checkout__form input[type="text"],
+	.wc-block-checkout__form input[type="email"],
+	.wc-block-checkout__form input[type="tel"],
+	.wc-block-checkout__form input[type="password"],
+	.wc-block-checkout__form select,
+	.wc-block-components-text-input input,
+	.wc-block-components-combobox input,
+	.wc-block-components-country-input select,
+	.wc-block-components-select select {
+		width: 100% !important;
+		min-height: 46px !important;
+		font-size: 15px !important;
+		border-radius: 6px !important;
+	}
+
+	/* 结账步骤按钮 */
+	.wc-block-components-checkout-button {
+		width: 100% !important;
+		padding: 15px !important;
+		font-size: 15px !important;
+	}
+}
