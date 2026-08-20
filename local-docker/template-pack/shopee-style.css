@@ -1492,3 +1492,164 @@ a {
     color: #d0011b !important;
   }
 }
+
+/* ============================================
+   移动端增强适配（全站通用）
+   ============================================ */
+
+@media (max-width: 767px) {
+	/* ---------- 通用商品网格：2 列（商店页/归档/短代码） ---------- */
+	ul.products,
+	.wc-block-grid ul.wc-block-grid__products {
+		display: grid !important;
+		grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+		gap: 8px !important;
+		padding: 0 8px !important;
+	}
+	ul.products li.product,
+	.wc-block-grid .wc-block-grid__product {
+		float: none !important;
+		width: auto !important;
+		margin: 0 !important;
+		border-radius: 4px !important;
+		overflow: hidden;
+		box-shadow: 0 1px 4px rgba(0, 0, 0, .11) !important;
+	}
+	ul.products li.product img {
+		width: 100%;
+		aspect-ratio: 1;
+		object-fit: cover;
+	}
+	/* 商品卡片内容适配 */
+	ul.products li.product .woocommerce-loop-product__title,
+	.wc-block-grid__product .wp-block-post-title a {
+		font-size: 12px !important;
+		line-height: 1.35 !important;
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+		overflow: hidden;
+	}
+	ul.products li.product .price {
+		font-size: 14px !important;
+		margin: 0 !important;
+		padding: 4px 8px 6px;
+	}
+	ul.products li.product .button,
+	.add_to_cart_button {
+		display: block;
+		width: auto;
+		margin: 0 8px 8px !important;
+		padding: 7px !important;
+		font-size: 11px !important;
+		text-align: center;
+	}
+
+	/* ---------- 商品详情页 ---------- */
+	.woocommerce div.product {
+		overflow: hidden;
+	}
+	.woocommerce div.product div.images,
+	.woocommerce div.product div.summary {
+		width: 100% !important;
+		float: none !important;
+		margin: 0 0 16px !important;
+	}
+	.woocommerce div.product div.images img {
+		border-radius: 8px;
+	}
+	.woocommerce div.product .product_title {
+		font-size: 18px !important;
+	}
+	.woocommerce div.product p.price {
+		font-size: 20px !important;
+	}
+	.woocommerce div.product form.cart {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+	}
+	.woocommerce div.product form.cart .quantity input {
+		height: 40px;
+	}
+	.woocommerce div.product form.cart .button {
+		flex: 1;
+		min-width: 140px;
+	}
+
+	/* ---------- 购物车页 ---------- */
+	.wc-block-cart .wc-block-cart__items,
+	.wc-block-cart .wc-block-cart__totals {
+		width: 100% !important;
+		float: none !important;
+		margin: 0 0 14px !important;
+	}
+	.wc-block-cart-item {
+		padding: 12px 0 !important;
+	}
+	.wc-block-cart-item .wc-block-cart-item__image img {
+		width: 72px !important;
+		height: 72px !important;
+		border-radius: 6px !important;
+	}
+	.wc-block-cart-item__product-name a {
+		font-size: 13px !important;
+	}
+	.wc-block-cart__submit-button {
+		padding: 12px !important;
+	}
+
+	/* ---------- 结账页 ---------- */
+	.wc-block-checkout .wc-block-checkout__sidebar,
+	.wc-block-checkout .wc-block-checkout__main {
+		width: 100% !important;
+		float: none !important;
+	}
+	.woocommerce form .form-row {
+		float: none !important;
+		width: 100% !important;
+	}
+
+	/* ---------- 其他通用 ---------- */
+	.woocommerce-breadcrumb {
+		font-size: 11px !important;
+		padding: 8px 12px !important;
+	}
+	.woocommerce-result-count,
+	.woocommerce-ordering {
+		float: none !important;
+		margin: 8px 12px !important;
+		display: inline-block;
+	}
+	.woocommerce-ordering select {
+		font-size: 12px !important;
+		padding: 6px !important;
+	}
+}
+
+/* ---------- 小屏手机（480px 以下） ---------- */
+@media (max-width: 480px) {
+	.shopee-slide .shopee-slide-title {
+		font-size: 17px !important;
+	}
+	.shopee-slide {
+		padding: 26px 12px !important;
+	}
+	.mall-shop-stats {
+		gap: 8px !important;
+	}
+	.mall-shop-stats span {
+		font-size: 10px !important;
+	}
+	.mall-shop-badge {
+		font-size: 10px !important;
+	}
+	.mall-shop-tabs a {
+		padding: 9px 10px !important;
+		font-size: 12px !important;
+	}
+	.woocommerce div.product form.cart .button {
+		width: 100%;
+		min-width: 0;
+	}
+}
