@@ -1,0 +1,619 @@
+/* Lazada 商城风格覆盖层。仅在店长选择 Lazada 平台模板时加载。 */
+:root[data-store-platform="lazada"] {
+  --lz-blue: #10177a;
+  --lz-blue-bright: #1746d1;
+  --lz-purple: #6c1cff;
+  --lz-violet: #8b3dff;
+  --lz-orange: #ff5f00;
+  --lz-pink: #f51d75;
+  --lz-bg: #f5f5fa;
+  --lz-surface: #ffffff;
+  --lz-surface-soft: #f2f1ff;
+  --lz-border: #e5e4f1;
+  --lz-text: #232333;
+  --lz-muted: #77778a;
+  --lz-gradient: linear-gradient(120deg, var(--lz-blue) 0%, #3e1cba 48%, var(--lz-purple) 100%);
+  --lz-shadow: 0 8px 26px rgba(39, 31, 117, .1);
+  --sp-primary: var(--lz-purple);
+  --sp-primary-dark: #4c13c7;
+  --sp-accent: var(--lz-orange);
+  --sp-bg: var(--lz-bg);
+  --sp-card-bg: var(--lz-surface);
+  --sp-card-border: 1px solid var(--lz-border);
+  --sp-text: var(--lz-text);
+  --sp-text-2: var(--lz-text);
+  --sp-muted: var(--lz-muted);
+  --sp-header-grad: var(--lz-gradient);
+  --sp-header-link-hover: #dcd5ff;
+  --sp-soft-bg: var(--lz-surface-soft);
+  --sp-footer-bg: #16154a;
+  --sp-footer-text: #c5c3e2;
+  --sp-footer-link: #fff;
+  --sp-footer-link-hover: #d7c8ff;
+  --sp-light: #fff;
+  --sp-light-2: #ece9ff;
+  --sp-btn-text: #fff;
+  color-scheme: light;
+}
+
+:root[data-store-platform="lazada"] body,
+:root[data-store-platform="lazada"] .wp-site-blocks,
+:root[data-store-platform="lazada"] main {
+  background: var(--lz-bg) !important;
+  color: var(--lz-text);
+}
+
+:root[data-store-platform="lazada"] .wp-site-blocks > header,
+:root[data-store-platform="lazada"] header.wp-block-template-part {
+  position: relative;
+  background: var(--lz-gradient) !important;
+  box-shadow: 0 5px 18px rgba(23, 20, 111, .2);
+}
+
+:root[data-store-platform="lazada"] .wp-site-blocks > header::after,
+:root[data-store-platform="lazada"] header.wp-block-template-part::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--lz-orange), var(--lz-pink), var(--lz-purple));
+}
+
+:root[data-store-platform="lazada"] .shopee-search .wp-block-search__inside-wrapper {
+  border: 0;
+  border-radius: 4px;
+  background: #fff;
+  box-shadow: 0 3px 12px rgba(19, 16, 100, .18);
+}
+
+:root[data-store-platform="lazada"] .shopee-search .wp-block-search__input {
+  color: var(--lz-text) !important;
+}
+
+:root[data-store-platform="lazada"] .shopee-search .wp-block-search__button {
+  border-radius: 0 4px 4px 0 !important;
+  background: linear-gradient(135deg, var(--lz-orange), var(--lz-pink)) !important;
+}
+
+:root[data-store-platform="lazada"] .shopee-search .wp-block-search__button svg {
+  fill: #fff !important;
+}
+
+/* 首页：规整促销商城布局。 */
+:root[data-store-platform="lazada"] .mall-storefront {
+  gap: 14px;
+  background:
+    radial-gradient(circle at 92% 3%, rgba(108, 28, 255, .1), transparent 26%),
+    var(--lz-bg);
+}
+
+:root[data-store-platform="lazada"] .mall-shop-hero {
+  min-height: 238px;
+  padding: 28px 32px;
+  border: 0;
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 84% 24%, rgba(255, 255, 255, .24), transparent 19%),
+    linear-gradient(118deg, #10166d 0%, #2931c2 46%, #7524dd 100%);
+  box-shadow: var(--lz-shadow);
+}
+
+:root[data-store-platform="lazada"] .mall-shop-hero::after {
+  background: linear-gradient(108deg, transparent 52%, rgba(255, 255, 255, .08));
+}
+
+:root[data-store-platform="lazada"] .mall-shop-logo {
+  border: 4px solid rgba(255, 255, 255, .95);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 5px 18px rgba(11, 9, 77, .3);
+}
+
+:root[data-store-platform="lazada"] .mall-shop-badge {
+  border: 0;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--lz-orange), var(--lz-pink));
+  color: #fff;
+  box-shadow: none;
+}
+
+:root[data-store-platform="lazada"] .mall-online-dot {
+  background: #62e7af;
+}
+
+:root[data-store-platform="lazada"] .mall-shop-actions a {
+  border-radius: 3px;
+}
+
+:root[data-store-platform="lazada"] .mall-shop-actions a:first-child {
+  border-color: #fff;
+  background: #fff;
+  color: var(--lz-blue) !important;
+}
+
+:root[data-store-platform="lazada"] .mall-shop-actions a:last-child {
+  background: rgba(255, 255, 255, .1);
+}
+
+:root[data-store-platform="lazada"] .mall-shop-tabs {
+  border: 1px solid var(--lz-border);
+  border-radius: 6px;
+  background: var(--lz-surface);
+  box-shadow: 0 2px 8px rgba(39, 31, 117, .05);
+}
+
+:root[data-store-platform="lazada"] .mall-shop-tabs a {
+  color: #555568 !important;
+}
+
+:root[data-store-platform="lazada"] .mall-shop-tabs a.active,
+:root[data-store-platform="lazada"] .mall-shop-tabs a:hover {
+  color: var(--lz-purple) !important;
+}
+
+:root[data-store-platform="lazada"] .mall-shop-tabs a.active::after {
+  inset-inline: 16px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--lz-blue-bright), var(--lz-purple));
+}
+
+:root[data-store-platform="lazada"] .mall-announcement {
+  border: 1px solid var(--lz-border);
+  border-inline-start: 4px solid var(--lz-orange);
+  border-radius: 6px;
+  background: var(--lz-surface);
+  color: var(--lz-text);
+}
+
+:root[data-store-platform="lazada"] .mall-announcement p {
+  color: var(--lz-muted);
+}
+
+:root[data-store-platform="lazada"] .mall-campaign-carousel {
+  border-radius: 8px;
+  box-shadow: var(--lz-shadow);
+}
+
+:root[data-store-platform="lazada"] .mall-campaign-carousel .shopee-slide {
+  min-height: 310px;
+  padding: 66px 42px;
+  border-radius: 8px;
+}
+
+:root[data-store-platform="lazada"] .mall-campaign-carousel .slide-1 {
+  background: radial-gradient(circle at 80% 32%, rgba(255, 255, 255, .24), transparent 24%), linear-gradient(120deg, #111a81, #263fd0 55%, #7541df) !important;
+}
+
+:root[data-store-platform="lazada"] .mall-campaign-carousel .slide-2 {
+  background: radial-gradient(circle at 78% 28%, rgba(255, 255, 255, .2), transparent 25%), linear-gradient(120deg, #4220a2, #7a27d5 54%, #e52887) !important;
+}
+
+:root[data-store-platform="lazada"] .mall-campaign-carousel .slide-3 {
+  background: linear-gradient(120deg, #101768, #1b55b9 54%, #00a8c6) !important;
+}
+
+:root[data-store-platform="lazada"] .mall-campaign-label {
+  border: 0;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--lz-orange), var(--lz-pink));
+  color: #fff;
+  letter-spacing: .8px;
+}
+
+:root[data-store-platform="lazada"] .mall-campaign-carousel .shopee-slide-title {
+  max-width: 610px;
+  font-size: clamp(36px, 5vw, 58px) !important;
+  letter-spacing: -.025em;
+}
+
+:root[data-store-platform="lazada"] .mall-campaign-carousel .shopee-slide-btn {
+  border-radius: 4px;
+  background: #fff;
+  color: var(--lz-blue) !important;
+  box-shadow: 0 4px 12px rgba(13, 11, 87, .18);
+}
+
+:root[data-store-platform="lazada"] .shopee-dot.active {
+  background: var(--lz-orange);
+}
+
+:root[data-store-platform="lazada"] .mall-section,
+:root[data-store-platform="lazada"] .mall-product-section,
+:root[data-store-platform="lazada"] .mall-contact-panel {
+  border: 1px solid var(--lz-border);
+  border-radius: 8px;
+  background: var(--lz-surface);
+  color: var(--lz-text);
+  box-shadow: 0 2px 10px rgba(39, 31, 117, .05);
+}
+
+:root[data-store-platform="lazada"] .mall-section-heading h2 {
+  color: var(--lz-text);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+:root[data-store-platform="lazada"] .mall-section-heading > a {
+  color: var(--lz-purple) !important;
+}
+
+:root[data-store-platform="lazada"] .mall-voucher-strip {
+  gap: 10px;
+}
+
+:root[data-store-platform="lazada"] .mall-voucher-card {
+  min-height: 92px;
+  border: 1px solid #dcd8ff;
+  border-radius: 6px;
+  background: linear-gradient(110deg, #f8f7ff, #fff);
+}
+
+:root[data-store-platform="lazada"] .mall-voucher-card::before,
+:root[data-store-platform="lazada"] .mall-voucher-card::after {
+  background: var(--lz-bg);
+}
+
+:root[data-store-platform="lazada"] .mall-voucher-card strong {
+  color: var(--lz-purple);
+}
+
+:root[data-store-platform="lazada"] .mall-voucher-card span {
+  color: var(--lz-muted);
+}
+
+:root[data-store-platform="lazada"] .mall-voucher-card > a {
+  border-radius: 3px;
+  background: var(--lz-gradient);
+}
+
+:root[data-store-platform="lazada"] .mall-category-rail {
+  grid-template-columns: repeat(6, minmax(100px, 1fr));
+  gap: 10px;
+}
+
+:root[data-store-platform="lazada"] .mall-category-rail a {
+  padding: 12px 8px;
+  border: 1px solid var(--lz-border);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--lz-text) !important;
+}
+
+:root[data-store-platform="lazada"] .mall-category-rail span {
+  width: 68px;
+  height: 68px;
+  border: 0;
+  border-radius: 10px;
+  background: linear-gradient(145deg, #eeecff, #faf9ff);
+  box-shadow: none;
+}
+
+:root[data-store-platform="lazada"] .mall-category-rail a:hover {
+  border-color: #b9adff;
+  box-shadow: 0 5px 14px rgba(67, 39, 170, .1);
+}
+
+:root[data-store-platform="lazada"] .mall-product-section {
+  padding: 18px !important;
+}
+
+:root[data-store-platform="lazada"] .mall-product-section.shopee-flashsale {
+  border: 1px solid var(--lz-border);
+  border-top: 4px solid var(--lz-purple);
+  background: #fff;
+}
+
+:root[data-store-platform="lazada"] .shopee-countdown {
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--lz-orange), var(--lz-pink));
+  color: #fff;
+}
+
+/* 商品墙和商品列表页：统一规格、促销标签突出。 */
+:root[data-store-platform="lazada"] li.product,
+:root[data-store-platform="lazada"] .wc-block-product {
+  position: relative;
+  border: 1px solid var(--lz-border);
+  border-radius: 6px !important;
+  background: var(--lz-surface) !important;
+  box-shadow: 0 2px 8px rgba(39, 31, 117, .06) !important;
+}
+
+:root[data-store-platform="lazada"] li.product:hover,
+:root[data-store-platform="lazada"] .wc-block-product:hover {
+  border-color: #b3a4ff;
+  box-shadow: var(--lz-shadow) !important;
+  transform: translateY(-2px);
+}
+
+:root[data-store-platform="lazada"] li.product img,
+:root[data-store-platform="lazada"] .wc-block-product img {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 5px 5px 0 0 !important;
+  object-fit: cover;
+}
+
+:root[data-store-platform="lazada"] .lazada-promo-tag {
+  display: inline-flex;
+  margin: 8px 9px 0;
+  padding: 3px 7px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--lz-orange), var(--lz-pink));
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .2px;
+}
+
+:root[data-store-platform="lazada"] li.product .price,
+:root[data-store-platform="lazada"] li.product .woocommerce-Price-amount,
+:root[data-store-platform="lazada"] .wc-block-components-product-price {
+  color: var(--lz-orange) !important;
+}
+
+:root[data-store-platform="lazada"] li.product .button,
+:root[data-store-platform="lazada"] .add_to_cart_button {
+  border-radius: 4px !important;
+  background: var(--lz-gradient) !important;
+  color: #fff !important;
+}
+
+:root[data-store-platform="lazada"] .lazada-reveal {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity .35s ease, transform .35s ease;
+}
+
+:root[data-store-platform="lazada"] .lazada-reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+:root[data-store-platform="lazada"] .woocommerce-shop .wp-block-query-title,
+:root[data-store-platform="lazada"] .woocommerce-shop .woocommerce-products-header__title {
+  color: var(--lz-blue) !important;
+  font-size: clamp(30px, 4vw, 48px) !important;
+  letter-spacing: -.025em;
+}
+
+/* 商品详情页。 */
+:root[data-store-platform="lazada"] .single-product .wp-site-blocks,
+:root[data-store-platform="lazada"] .single-product main {
+  background: var(--lz-bg) !important;
+}
+
+:root[data-store-platform="lazada"] .single-product div.product {
+  padding: clamp(16px, 3vw, 34px);
+  border: 1px solid var(--lz-border);
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: var(--lz-shadow);
+}
+
+:root[data-store-platform="lazada"] .single-product .woocommerce-product-gallery img {
+  border: 1px solid var(--lz-border);
+  border-radius: 8px;
+  background: #fff;
+}
+
+:root[data-store-platform="lazada"] .single-product .product_title,
+:root[data-store-platform="lazada"] .single-product .woocommerce-product-details__short-description,
+:root[data-store-platform="lazada"] .single-product .woocommerce-tabs,
+:root[data-store-platform="lazada"] .single-product .related.products > h2 {
+  color: var(--lz-text) !important;
+}
+
+:root[data-store-platform="lazada"] .single-product .summary .price,
+:root[data-store-platform="lazada"] .single-product .summary .price .woocommerce-Price-amount {
+  color: var(--lz-orange) !important;
+  font-size: clamp(25px, 4vw, 36px) !important;
+}
+
+:root[data-store-platform="lazada"] .single-product .single_add_to_cart_button {
+  min-height: 50px;
+  padding-inline: 30px !important;
+  border: 0 !important;
+  border-radius: 4px !important;
+  background: var(--lz-gradient) !important;
+  color: #fff !important;
+  box-shadow: 0 6px 16px rgba(72, 35, 190, .22);
+}
+
+:root[data-store-platform="lazada"] .single-product .quantity .qty,
+:root[data-store-platform="lazada"] input,
+:root[data-store-platform="lazada"] select,
+:root[data-store-platform="lazada"] textarea {
+  border-color: var(--lz-border) !important;
+  background: #fff !important;
+  color: var(--lz-text) !important;
+}
+
+/* 购物车页：浅色清爽卡片。 */
+:root[data-store-platform="lazada"] .wc-block-cart,
+:root[data-store-platform="lazada"] .wp-block-woocommerce-cart {
+  color: var(--lz-text);
+}
+
+:root[data-store-platform="lazada"] .wc-block-cart__items,
+:root[data-store-platform="lazada"] .wc-block-cart__totals {
+  border: 1px solid var(--lz-border);
+  border-radius: 10px;
+  background: #fff !important;
+  box-shadow: var(--lz-shadow);
+}
+
+:root[data-store-platform="lazada"] .wc-block-cart-item {
+  border-color: var(--lz-border) !important;
+  background: #fff !important;
+}
+
+:root[data-store-platform="lazada"] .wc-block-cart-item__product-name a,
+:root[data-store-platform="lazada"] .wc-block-cart__totals-title,
+:root[data-store-platform="lazada"] .wc-block-components-totals-item__label,
+:root[data-store-platform="lazada"] .wc-block-components-totals-item__value {
+  color: var(--lz-text) !important;
+}
+
+:root[data-store-platform="lazada"] .wc-block-cart-item__prices,
+:root[data-store-platform="lazada"] .wc-block-cart-subtotal .wc-block-components-totals-item__value {
+  color: var(--lz-orange) !important;
+}
+
+:root[data-store-platform="lazada"] .wc-block-components-quantity-selector {
+  border-color: var(--lz-border) !important;
+  background: #fff !important;
+}
+
+:root[data-store-platform="lazada"] .wc-block-cart__submit-button,
+:root[data-store-platform="lazada"] .wc-block-components-checkout-button {
+  border: 0 !important;
+  border-radius: 4px !important;
+  background: var(--lz-gradient) !important;
+  color: #fff !important;
+  box-shadow: 0 6px 16px rgba(72, 35, 190, .2);
+}
+
+/* 结账页：只修改视觉，表单和下单行为仍由 WooCommerce 提供。 */
+:root[data-store-platform="lazada"] .wc-block-checkout,
+:root[data-store-platform="lazada"] .wp-block-woocommerce-checkout {
+  color: var(--lz-text);
+}
+
+:root[data-store-platform="lazada"] .wc-block-checkout__main,
+:root[data-store-platform="lazada"] .wc-block-checkout__sidebar,
+:root[data-store-platform="lazada"] .wc-block-components-checkout-step,
+:root[data-store-platform="lazada"] .wc-block-components-order-summary {
+  border-color: var(--lz-border) !important;
+  border-radius: 10px;
+  background: #fff !important;
+  color: var(--lz-text) !important;
+}
+
+:root[data-store-platform="lazada"] .wc-block-components-checkout-step,
+:root[data-store-platform="lazada"] .wc-block-components-order-summary {
+  margin-bottom: 12px;
+  padding: 18px;
+  border: 1px solid var(--lz-border) !important;
+  box-shadow: 0 3px 12px rgba(39, 31, 117, .06);
+}
+
+:root[data-store-platform="lazada"] .wc-block-components-title,
+:root[data-store-platform="lazada"] .wc-block-components-checkout-step__heading,
+:root[data-store-platform="lazada"] .wc-block-components-order-summary-item__description,
+:root[data-store-platform="lazada"] .wc-block-components-totals-item {
+  color: var(--lz-text) !important;
+}
+
+:root[data-store-platform="lazada"] .wc-block-components-order-summary .wc-block-components-product-price,
+:root[data-store-platform="lazada"] .wc-block-checkout__sidebar .wc-block-components-totals-footer-item .wc-block-components-totals-item__value {
+  color: var(--lz-orange) !important;
+}
+
+:root[data-store-platform="lazada"] .wc-block-components-text-input input,
+:root[data-store-platform="lazada"] .wc-block-components-combobox .wc-block-components-combobox-control input {
+  border-color: var(--lz-border) !important;
+  background: #fff !important;
+  color: var(--lz-text) !important;
+}
+
+:root[data-store-platform="lazada"] .mall-contact-panel span {
+  color: var(--lz-muted);
+}
+
+:root[data-store-platform="lazada"] .mall-contact-panel > a {
+  border-color: var(--lz-purple);
+  border-radius: 4px;
+  color: var(--lz-purple) !important;
+}
+
+:root[data-store-platform="lazada"] footer.wp-block-template-part {
+  background: var(--sp-footer-bg) !important;
+}
+
+@media (max-width: 767px) {
+  :root[data-store-platform="lazada"] .wp-site-blocks > header,
+  :root[data-store-platform="lazada"] header.wp-block-template-part {
+    background: var(--lz-gradient) !important;
+  }
+
+  :root[data-store-platform="lazada"] .mall-storefront {
+    background: var(--lz-bg);
+  }
+
+  :root[data-store-platform="lazada"] .mall-shop-hero,
+  :root[data-store-platform="lazada"] .mall-shop-tabs,
+  :root[data-store-platform="lazada"] .mall-campaign-carousel,
+  :root[data-store-platform="lazada"] .mall-section,
+  :root[data-store-platform="lazada"] .mall-product-section {
+    border-radius: 0;
+  }
+
+  :root[data-store-platform="lazada"] .mall-shop-hero {
+    min-height: 198px;
+    padding: 16px 12px;
+  }
+
+  :root[data-store-platform="lazada"] .mall-campaign-carousel .shopee-slide {
+    min-height: 268px;
+    padding: 46px 20px 58px;
+  }
+
+  :root[data-store-platform="lazada"] .mall-campaign-carousel .shopee-slide-title {
+    font-size: 34px !important;
+  }
+
+  :root[data-store-platform="lazada"] .mall-category-rail a {
+    flex-basis: 78px;
+    padding: 9px 5px;
+  }
+
+  :root[data-store-platform="lazada"] .mall-product-section ul.products {
+    gap: 6px !important;
+  }
+
+  :root[data-store-platform="lazada"] .mall-product-section ul.products li.product {
+    border-radius: 4px !important;
+    background: #fff !important;
+  }
+
+  :root[data-store-platform="lazada"] .mall-product-section li.product img {
+    aspect-ratio: 1;
+    border-radius: 3px 3px 0 0 !important;
+  }
+
+  :root[data-store-platform="lazada"] .mall-product-section li.product .button {
+    border-radius: 3px !important;
+    background: var(--lz-gradient) !important;
+  }
+
+  :root[data-store-platform="lazada"] .mall-mobile-nav {
+    border-top-color: var(--lz-border);
+    background: #fff;
+  }
+
+  :root[data-store-platform="lazada"] .mall-mobile-nav a {
+    color: var(--lz-muted) !important;
+  }
+
+  :root[data-store-platform="lazada"] .mall-mobile-nav a.active {
+    color: var(--lz-purple) !important;
+  }
+
+  :root[data-store-platform="lazada"] .single-product div.product,
+  :root[data-store-platform="lazada"] .wc-block-cart__items,
+  :root[data-store-platform="lazada"] .wc-block-cart__totals,
+  :root[data-store-platform="lazada"] .wc-block-components-checkout-step,
+  :root[data-store-platform="lazada"] .wc-block-components-order-summary {
+    border-radius: 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-store-platform="lazada"] .lazada-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

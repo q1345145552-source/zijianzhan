@@ -1,23 +1,41 @@
-# 湘泰商城 · Shopee 装修模板包
+# 湘泰商城 · 电商平台装修模板包
 
-这套模板包含你在本地测试环境里做好的全部装修（Shopee 橙风格 + 4 套主题 + 首页 + 购物车 + 后台品牌化），可以复制到任何 WordPress + WooCommerce 站点直接复用。
+这套模板包含 Shopee Mall 手机店布局、TikTok 商城风格、Lazada 商城风格、Shopee 的 4 套配色、首页、购物车和后台品牌化，可以复制到任何 WordPress + WooCommerce 站点复用。
 
 ## 文件清单与部署位置
 
 | 文件 | 作用 | 部署到（目标站点） |
 | ------ | ------ | ------------------- |
 | `shopee-style.css` | 前台全部样式：4 套主题色 + 首页横幅/分类/抢购 + 购物车 + 结账按钮 + 销量评分 | `wp-content/mu-plugins/` |
-| `shopee-frontend.js` | 前端脚本：轮播、倒计时、销量评分注入、主题切换器 | `wp-content/mu-plugins/` |
-| `shopee-style-loader.php` | 加载器：输出 CSS/JS + 商品销量评分数据 + 主题切换按钮 | `wp-content/mu-plugins/` |
+| `shopee-frontend.js` | 通用前端脚本：轮播、倒计时、销量评分注入 | `wp-content/mu-plugins/` |
+| `tiktok-style.css` | TikTok 商城深色与霓虹视觉：全店、商品、购物车和结账页 | `wp-content/mu-plugins/` |
+| `tiktok-frontend.js` | TikTok 模板的展示文案和商品墙入场效果 | `wp-content/mu-plugins/` |
+| `lazada-style.css` | Lazada 商城蓝紫视觉：全店、商品、购物车和结账页 | `wp-content/mu-plugins/` |
+| `lazada-frontend.js` | Lazada 模板的促销标签和商品墙入场效果 | `wp-content/mu-plugins/` |
+| `shopee-style-loader.php` | 加载器：根据店长选择加载平台 CSS/JS，并输出商品销量评分数据 | `wp-content/mu-plugins/` |
+| `shopee-admin-panel.php` | 店铺装修面板 + 平台模板切换 + 一键应用商品模板 | `wp-content/mu-plugins/` |
 | `admin-branding.php` | 后台定制：Shopee 橙主题色 + 后台 logo + 移除 WooCommerce 仪表盘小组件 | `wp-content/mu-plugins/` |
 | `header.php` | 前台顶部：logo + 搜索栏 + 购物车图标（Twenty Twenty-Five 主题模板） | `wp-content/themes/twentytwentyfive/patterns/header.php`（覆盖同名文件，原文件备份为 header.php.bak） |
-| `home-page.html` | 首页内容（横幅轮播 + 分类导航 + 限时抢购 + 精选商品），Gutenberg 区块格式 | 后台新建「首页」页面 → 用代码编辑器粘贴全文 → 设为静态首页 |
+| `home-page.html` | Shopee Mall 手机店首页内容，供装修面板一键应用 | `wp-content/mu-plugins/` |
 
 ## 部署步骤（在目标 WordPress 站点）
 
 ### 1. 上传 mu-plugin 文件
 
-把 `shopee-style.css`、`shopee-frontend.js`、`shopee-style-loader.php`、`admin-branding.php` 4 个文件上传到：
+把下面 10 个文件上传到目标站点：
+
+- `shopee-style.css`
+- `shopee-frontend.js`
+- `tiktok-style.css`
+- `tiktok-frontend.js`
+- `lazada-style.css`
+- `lazada-frontend.js`
+- `shopee-style-loader.php`
+- `shopee-admin-panel.php`
+- `admin-branding.php`
+- `home-page.html`
+
+部署目录：
 
 ```text
 wp-content/mu-plugins/
@@ -37,10 +55,13 @@ wp-content/themes/twentytwentyfive/patterns/header.php
 
 ### 3. 设置首页
 
-1. 后台 → 页面 → 新建页面 → 标题「首页」
-2. 右上角「选项」→ 开启「代码编辑器」
-3. 粘贴 `home-page.html` 全部内容 → 发布
-4. 设置 → 阅读 → 静态首页 → 选择「首页」
+1. 后台 → WooCommerce → 店铺装修
+2. 找到「商品模板」卡片
+3. 点击「应用商品模板」
+
+按钮会自动创建或更新静态首页，并应用泰语店名、泰语副标题、默认 Mall 配色、双列商品流和手机底部导航。
+
+然后在「平台模板」中选择 Shopee、TikTok 或 Lazada。选择 Shopee 时可以继续选择 4 套配色；选择 TikTok 或 Lazada 时使用对应平台的固定外观。
 
 ### 4. 检查前置条件
 
@@ -51,7 +72,8 @@ wp-content/themes/twentytwentyfive/patterns/header.php
 ## 自定义说明
 
 - **换主色调**：改 `shopee-style.css` 顶部的 `:root` / `[data-shopee-theme="..."]` 变量组
-- **4 套主题切换**：前台右下角 🎨 按钮，选择保存在 localStorage
+- **平台模板**：由店长在后台统一选择，访客不能切换
+- **Shopee 的 4 套配色**：仅在后台选择 Shopee 平台模板时显示
 - **后台 logo**：`admin-branding.php` 里 `wp_get_attachment_image_url(44, ...)` 的 `44` 是本地附件 ID，部署后改成目标站点的 logo 附件 ID
 - **店铺名**：`admin-branding.php` 和加载器里的「湘泰商城」改成你的店名
 

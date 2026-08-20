@@ -17,8 +17,21 @@ add_action(
 add_action(
 	'wp_enqueue_scripts',
 	function () {
-		wp_enqueue_style( 'shopee-style', content_url() . '/mu-plugins/shopee-style.css', array(), '1.0.4' );
-		wp_enqueue_script( 'shopee-frontend', content_url() . '/mu-plugins/shopee-frontend.js', array(), '1.0.0', true );
+		$settings = function_exists( 'shopee_get_settings' ) ? shopee_get_settings() : array( 'platform' => 'shopee' );
+		$platform = isset( $settings['platform'] ) && in_array( $settings['platform'], array( 'shopee', 'tiktok', 'lazada' ), true ) ? $settings['platform'] : 'shopee';
+
+		wp_enqueue_style( 'shopee-style', content_url() . '/mu-plugins/shopee-style.css', array(), '1.3.0' );
+		wp_enqueue_script( 'shopee-frontend', content_url() . '/mu-plugins/shopee-frontend.js', array(), '1.3.0', true );
+
+		if ( 'tiktok' === $platform ) {
+			wp_enqueue_style( 'tiktok-style', content_url() . '/mu-plugins/tiktok-style.css', array( 'shopee-style' ), '1.0.0' );
+			wp_enqueue_script( 'tiktok-frontend', content_url() . '/mu-plugins/tiktok-frontend.js', array(), '1.0.0', true );
+		}
+
+		if ( 'lazada' === $platform ) {
+			wp_enqueue_style( 'lazada-style', content_url() . '/mu-plugins/lazada-style.css', array( 'shopee-style' ), '1.0.0' );
+			wp_enqueue_script( 'lazada-frontend', content_url() . '/mu-plugins/lazada-frontend.js', array(), '1.0.0', true );
+		}
 	}
 );
 
@@ -48,34 +61,17 @@ add_filter(
 	}
 );
 
-/* ---------- 页面渲染前设置主题（?theme= 调试参数 / localStorage / 面板默认主题） ---------- */
+/* ---------- 页面渲染前应用店长保存的平台与 Shopee 配色 ---------- */
 add_action(
 	'wp_head',
 	function () {
-		$default_theme = function_exists( 'shopee_get_settings' ) ? shopee_get_settings()['theme'] : 'default';
-		$default_theme = esc_js( $default_theme );
-		echo '<script>(function(){var m=location.search.match(/[?&]theme=([a-z-]+)/);var t=m?m[1]:(function(){try{return localStorage.getItem("shopeeTheme")||"' . $default_theme . '";}catch(e){return "' . $default_theme . '";}})();document.documentElement.setAttribute("data-shopee-theme",t);})();</script>';
+		$settings = function_exists( 'shopee_get_settings' ) ? shopee_get_settings() : array( 'platform' => 'shopee', 'theme' => 'default' );
+		$platform = isset( $settings['platform'] ) && in_array( $settings['platform'], array( 'shopee', 'tiktok', 'lazada' ), true ) ? $settings['platform'] : 'shopee';
+		$theme    = isset( $settings['theme'] ) ? $settings['theme'] : 'default';
+
+		echo '<script>(function(){var r=document.documentElement;r.setAttribute("data-store-platform",' . wp_json_encode( $platform ) . ');r.setAttribute("data-shopee-theme",' . wp_json_encode( $theme ) . ');})();</script>';
 	},
 	1
-);
-
-/* ---------- 主题切换器（右下角，按面板开关） ---------- */
-add_action(
-	'wp_footer',
-	function () {
-		if ( function_exists( 'shopee_get_settings' ) && empty( shopee_get_settings()['show_switcher'] ) ) {
-			return;
-		}
-		echo '<div class="shopee-theme-switcher">';
-		echo '<button class="shopee-theme-toggle" aria-label="切换店铺风格">主题</button>';
-		echo '<div class="shopee-theme-menu">';
-		echo '<button data-theme="default" class="active">Shopee 橙</button>';
-		echo '<button data-theme="minimal">简约白</button>';
-		echo '<button data-theme="black-gold">黑金奢华</button>';
-		echo '<button data-theme="green">清新绿</button>';
-		echo '</div></div>';
-	},
-	5
 );
 
 /* ---------- 商品销量/评分数据（按面板开关） ---------- */

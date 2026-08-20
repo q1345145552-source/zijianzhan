@@ -21,14 +21,14 @@
 			<!-- wp:group {"layout":{"type":"flex","flexWrap":"nowrap"}} -->
 			<div class="wp-block-group">
 				<!-- wp:image {"id":44,"sizeSlug":"full","linkDestination":"none","className":"shopee-header-logo"} -->
-				<figure class="wp-block-image size-full shopee-header-logo"><img src="http://localhost:8080/wp-content/uploads/2026/08/4.png" alt="湘泰商城 Logo" class="wp-image-44"/></figure>
+				<figure class="wp-block-image size-full shopee-header-logo"><img src="http://localhost:8080/wp-content/uploads/2026/08/4.png" alt="โลโก้เซียงไท่ มอลล์" class="wp-image-44"/></figure>
 				<!-- /wp:image -->
 				<!-- wp:site-title {"level":0} /-->
 			</div>
 			<!-- /wp:group -->
 			<!-- wp:group {"style":{"spacing":{"blockGap":"var:preset|spacing|10"}},"layout":{"type":"flex","flexWrap":"nowrap","justifyContent":"right"}} -->
 			<div class="wp-block-group">
-				<!-- wp:search {"label":"搜索","placeholder":"搜索商品…","buttonText":"","buttonUseIcon":true,"showLabel":false,"className":"shopee-search"} /-->
+				<!-- wp:search {"label":"ค้นหา","placeholder":"ค้นหาสินค้าในร้าน…","buttonText":"","buttonUseIcon":true,"showLabel":false,"className":"shopee-search"} /-->
 				<!-- wp:woocommerce/mini-cart {"addToCartBehaviour":"open_drawer"} /-->
 				<!-- wp:navigation {"overlayBackgroundColor":"base","overlayTextColor":"contrast","layout":{"type":"flex","justifyContent":"right","flexWrap":"wrap"}} /-->
 			</div>

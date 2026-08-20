@@ -1,0 +1,594 @@
+/* TikTok 商城风格覆盖层。仅在店长选择 TikTok 平台模板时加载。 */
+:root[data-store-platform="tiktok"] {
+  --tk-bg: #08090c;
+  --tk-surface: #121419;
+  --tk-surface-2: #191c22;
+  --tk-border: rgba(255, 255, 255, .1);
+  --tk-text: #f7f7f8;
+  --tk-muted: #a7a9b2;
+  --tk-cyan: #25f4ee;
+  --tk-red: #fe2c55;
+  --tk-glow: 0 0 24px rgba(37, 244, 238, .16), 0 0 28px rgba(254, 44, 85, .12);
+  --sp-primary: var(--tk-cyan);
+  --sp-primary-dark: #17c9c4;
+  --sp-accent: var(--tk-red);
+  --sp-bg: var(--tk-bg);
+  --sp-card-bg: var(--tk-surface);
+  --sp-card-border: 1px solid var(--tk-border);
+  --sp-text: var(--tk-text);
+  --sp-text-2: var(--tk-text);
+  --sp-muted: var(--tk-muted);
+  --sp-header-grad: linear-gradient(105deg, #06070a 0%, #101218 62%, #15131a 100%);
+  --sp-header-link-hover: var(--tk-cyan);
+  --sp-soft-bg: var(--tk-surface-2);
+  --sp-footer-bg: #050608;
+  --sp-footer-text: var(--tk-muted);
+  --sp-footer-link: var(--tk-text);
+  --sp-footer-link-hover: var(--tk-cyan);
+  --sp-light: var(--tk-text);
+  --sp-light-2: #d8d9df;
+  --sp-btn-text: #050608;
+  color-scheme: dark;
+}
+
+:root[data-store-platform="tiktok"] body,
+:root[data-store-platform="tiktok"] .wp-site-blocks,
+:root[data-store-platform="tiktok"] main {
+  background: var(--tk-bg) !important;
+  color: var(--tk-text);
+}
+
+:root[data-store-platform="tiktok"] .wp-site-blocks > header,
+:root[data-store-platform="tiktok"] header.wp-block-template-part {
+  position: relative;
+  border-bottom: 1px solid var(--tk-border);
+  background: var(--sp-header-grad) !important;
+}
+
+:root[data-store-platform="tiktok"] .wp-site-blocks > header::after,
+:root[data-store-platform="tiktok"] header.wp-block-template-part::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: -1px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--tk-cyan), var(--tk-red), transparent);
+  opacity: .8;
+}
+
+:root[data-store-platform="tiktok"] .shopee-search .wp-block-search__inside-wrapper {
+  border: 1px solid rgba(255, 255, 255, .18);
+  background: var(--tk-surface-2);
+  box-shadow: inset 3px 0 0 var(--tk-cyan), inset -3px 0 0 var(--tk-red);
+}
+
+:root[data-store-platform="tiktok"] .shopee-search .wp-block-search__input,
+:root[data-store-platform="tiktok"] .shopee-search .wp-block-search__button {
+  background: transparent !important;
+  color: var(--tk-text) !important;
+}
+
+:root[data-store-platform="tiktok"] .shopee-search .wp-block-search__button svg {
+  fill: var(--tk-cyan) !important;
+}
+
+/* 首页：紧凑、非对称、视频感布局。 */
+:root[data-store-platform="tiktok"] .mall-storefront {
+  gap: 10px;
+  background:
+    radial-gradient(circle at 8% 8%, rgba(37, 244, 238, .08), transparent 24%),
+    radial-gradient(circle at 92% 22%, rgba(254, 44, 85, .08), transparent 26%),
+    var(--tk-bg);
+}
+
+:root[data-store-platform="tiktok"] .mall-shop-hero {
+  min-height: 250px;
+  padding: 30px;
+  border: 1px solid var(--tk-border);
+  border-radius: 18px;
+  background:
+    linear-gradient(110deg, rgba(37, 244, 238, .12), transparent 36%),
+    linear-gradient(290deg, rgba(254, 44, 85, .16), transparent 38%),
+    #0d0f14;
+  box-shadow: var(--tk-glow);
+}
+
+:root[data-store-platform="tiktok"] .mall-shop-hero::after {
+  background: repeating-linear-gradient(115deg, transparent 0 38px, rgba(255, 255, 255, .025) 39px 40px);
+}
+
+:root[data-store-platform="tiktok"] .mall-shop-logo {
+  border-color: var(--tk-text);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: -5px 0 0 var(--tk-cyan), 5px 0 0 var(--tk-red);
+}
+
+:root[data-store-platform="tiktok"] .mall-shop-copy h1,
+:root[data-store-platform="tiktok"] .mall-shop-stats strong {
+  color: var(--tk-text);
+}
+
+:root[data-store-platform="tiktok"] .mall-shop-badge {
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--tk-cyan), var(--tk-red));
+  color: #050608;
+  box-shadow: none;
+}
+
+:root[data-store-platform="tiktok"] .mall-online-dot {
+  background: var(--tk-cyan);
+  box-shadow: 0 0 10px var(--tk-cyan);
+}
+
+:root[data-store-platform="tiktok"] .mall-shop-actions a {
+  border-color: var(--tk-border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .05);
+}
+
+:root[data-store-platform="tiktok"] .mall-shop-actions a:first-child {
+  border: 0;
+  background: linear-gradient(90deg, var(--tk-cyan), #8bfff9);
+  color: #050608 !important;
+}
+
+:root[data-store-platform="tiktok"] .mall-shop-actions a:last-child {
+  border-color: var(--tk-red);
+  color: var(--tk-text) !important;
+  box-shadow: inset 0 0 14px rgba(254, 44, 85, .12);
+}
+
+:root[data-store-platform="tiktok"] .mall-shop-tabs,
+:root[data-store-platform="tiktok"] .mall-announcement,
+:root[data-store-platform="tiktok"] .mall-section,
+:root[data-store-platform="tiktok"] .mall-product-section,
+:root[data-store-platform="tiktok"] .mall-contact-panel {
+  border-color: var(--tk-border);
+  background: var(--tk-surface);
+  color: var(--tk-text);
+}
+
+:root[data-store-platform="tiktok"] .mall-shop-tabs {
+  border: 1px solid var(--tk-border);
+  border-radius: 999px;
+}
+
+:root[data-store-platform="tiktok"] .mall-shop-tabs a {
+  color: var(--tk-muted) !important;
+}
+
+:root[data-store-platform="tiktok"] .mall-shop-tabs a.active,
+:root[data-store-platform="tiktok"] .mall-shop-tabs a:hover {
+  color: var(--tk-text) !important;
+}
+
+:root[data-store-platform="tiktok"] .mall-shop-tabs a.active::after {
+  inset-inline: 24px;
+  background: linear-gradient(90deg, var(--tk-cyan), var(--tk-red));
+}
+
+:root[data-store-platform="tiktok"] .mall-announcement {
+  border-inline-start-color: var(--tk-cyan);
+}
+
+:root[data-store-platform="tiktok"] .mall-announcement p,
+:root[data-store-platform="tiktok"] .mall-contact-panel span {
+  color: var(--tk-muted);
+}
+
+:root[data-store-platform="tiktok"] .mall-campaign-carousel {
+  border: 1px solid var(--tk-border);
+  border-radius: 18px;
+  box-shadow: var(--tk-glow);
+}
+
+:root[data-store-platform="tiktok"] .mall-campaign-carousel .shopee-slide {
+  min-height: 330px;
+  padding: 78px 46px;
+  border-radius: 18px;
+}
+
+:root[data-store-platform="tiktok"] .mall-campaign-carousel .slide-1 {
+  background: radial-gradient(circle at 78% 30%, rgba(37, 244, 238, .42), transparent 24%), linear-gradient(125deg, #090a0e 12%, #17272a 62%, #071416) !important;
+}
+
+:root[data-store-platform="tiktok"] .mall-campaign-carousel .slide-2 {
+  background: radial-gradient(circle at 76% 30%, rgba(254, 44, 85, .42), transparent 25%), linear-gradient(125deg, #0a0b0f 10%, #30131b 62%, #16080d) !important;
+}
+
+:root[data-store-platform="tiktok"] .mall-campaign-carousel .slide-3 {
+  background: linear-gradient(125deg, #08090d, #17222c 48%, #2e1524) !important;
+}
+
+:root[data-store-platform="tiktok"] .mall-campaign-label {
+  border: 0;
+  color: var(--tk-cyan);
+  font-size: 12px;
+  letter-spacing: 2px;
+}
+
+:root[data-store-platform="tiktok"] .mall-campaign-carousel .shopee-slide-title {
+  max-width: 640px;
+  font-size: clamp(38px, 6vw, 72px) !important;
+  letter-spacing: -.045em;
+  text-shadow: -3px 0 0 rgba(37, 244, 238, .7), 3px 0 0 rgba(254, 44, 85, .7);
+}
+
+:root[data-store-platform="tiktok"] .mall-campaign-carousel .shopee-slide-btn {
+  border-radius: 999px;
+  background: var(--tk-text);
+  color: #050608 !important;
+}
+
+:root[data-store-platform="tiktok"] .shopee-dot.active {
+  background: linear-gradient(90deg, var(--tk-cyan), var(--tk-red));
+}
+
+:root[data-store-platform="tiktok"] .mall-section-heading h2 {
+  color: var(--tk-text);
+  font-size: 21px;
+  letter-spacing: -.02em;
+}
+
+:root[data-store-platform="tiktok"] .mall-section-heading > a {
+  color: var(--tk-cyan) !important;
+}
+
+:root[data-store-platform="tiktok"] .mall-voucher-card {
+  min-height: 105px;
+  border-color: var(--tk-border);
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(37, 244, 238, .08), rgba(254, 44, 85, .06)), var(--tk-surface-2);
+}
+
+:root[data-store-platform="tiktok"] .mall-voucher-card::before,
+:root[data-store-platform="tiktok"] .mall-voucher-card::after {
+  display: none;
+}
+
+:root[data-store-platform="tiktok"] .mall-voucher-card strong {
+  color: var(--tk-text);
+}
+
+:root[data-store-platform="tiktok"] .mall-voucher-card span {
+  color: var(--tk-muted);
+}
+
+:root[data-store-platform="tiktok"] .mall-voucher-card > a {
+  border-radius: 999px;
+  background: var(--tk-red);
+}
+
+:root[data-store-platform="tiktok"] .mall-category-rail {
+  grid-template-columns: repeat(6, minmax(105px, 1fr));
+  gap: 8px;
+}
+
+:root[data-store-platform="tiktok"] .mall-category-rail a {
+  padding: 14px 8px;
+  border: 1px solid var(--tk-border);
+  border-radius: 14px;
+  background: var(--tk-surface-2);
+  color: var(--tk-text) !important;
+}
+
+:root[data-store-platform="tiktok"] .mall-category-rail span {
+  width: 64px;
+  height: 64px;
+  border: 0;
+  background: #232731;
+  box-shadow: -3px 0 0 rgba(37, 244, 238, .5), 3px 0 0 rgba(254, 44, 85, .5);
+}
+
+:root[data-store-platform="tiktok"] .mall-product-section {
+  padding: 12px !important;
+  border: 1px solid var(--tk-border);
+  border-radius: 18px;
+}
+
+:root[data-store-platform="tiktok"] .mall-product-section.shopee-flashsale {
+  border-top: 2px solid var(--tk-cyan);
+  background: linear-gradient(140deg, rgba(37, 244, 238, .035), rgba(254, 44, 85, .035)), var(--tk-surface);
+}
+
+:root[data-store-platform="tiktok"] .shopee-countdown {
+  background: var(--tk-red);
+  color: #fff;
+}
+
+/* 商品墙与商品列表页。 */
+:root[data-store-platform="tiktok"] li.product,
+:root[data-store-platform="tiktok"] .wc-block-product {
+  border: 1px solid var(--tk-border);
+  border-radius: 14px !important;
+  background: var(--tk-surface) !important;
+  box-shadow: none !important;
+}
+
+:root[data-store-platform="tiktok"] li.product:hover,
+:root[data-store-platform="tiktok"] .wc-block-product:hover {
+  border-color: rgba(37, 244, 238, .55);
+  box-shadow: var(--tk-glow) !important;
+}
+
+:root[data-store-platform="tiktok"] li.product img,
+:root[data-store-platform="tiktok"] .wc-block-product img {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  border-radius: 13px 13px 4px 4px !important;
+  object-fit: cover;
+}
+
+:root[data-store-platform="tiktok"] li.product .price,
+:root[data-store-platform="tiktok"] li.product .woocommerce-Price-amount,
+:root[data-store-platform="tiktok"] .wc-block-components-product-price {
+  color: var(--tk-cyan) !important;
+  text-shadow: 1px 0 10px rgba(37, 244, 238, .18);
+}
+
+:root[data-store-platform="tiktok"] li.product .button,
+:root[data-store-platform="tiktok"] .add_to_cart_button {
+  border-radius: 999px !important;
+  background: linear-gradient(90deg, var(--tk-cyan), #8bfff9) !important;
+  color: #050608 !important;
+}
+
+:root[data-store-platform="tiktok"] .tiktok-reveal {
+  opacity: 0;
+  transform: translateY(18px) scale(.985);
+  transition: opacity .45s ease, transform .45s ease;
+}
+
+:root[data-store-platform="tiktok"] .tiktok-reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+:root[data-store-platform="tiktok"] .woocommerce-shop .wp-block-query-title,
+:root[data-store-platform="tiktok"] .woocommerce-shop .woocommerce-products-header__title {
+  color: var(--tk-text) !important;
+  font-size: clamp(30px, 5vw, 58px) !important;
+  letter-spacing: -.045em;
+}
+
+/* 商品详情页：突出商品图，按钮保持原有 WooCommerce 行为。 */
+:root[data-store-platform="tiktok"] .single-product .wp-site-blocks,
+:root[data-store-platform="tiktok"] .single-product main {
+  background: var(--tk-bg) !important;
+}
+
+:root[data-store-platform="tiktok"] .single-product div.product {
+  padding: clamp(14px, 3vw, 34px);
+  border: 1px solid var(--tk-border);
+  border-radius: 20px;
+  background: var(--tk-surface);
+  box-shadow: var(--tk-glow);
+}
+
+:root[data-store-platform="tiktok"] .single-product .woocommerce-product-gallery img {
+  border-radius: 16px;
+  background: var(--tk-surface-2);
+}
+
+:root[data-store-platform="tiktok"] .single-product .product_title,
+:root[data-store-platform="tiktok"] .single-product .woocommerce-product-details__short-description,
+:root[data-store-platform="tiktok"] .single-product .woocommerce-tabs,
+:root[data-store-platform="tiktok"] .single-product .related.products > h2 {
+  color: var(--tk-text) !important;
+}
+
+:root[data-store-platform="tiktok"] .single-product .summary .price,
+:root[data-store-platform="tiktok"] .single-product .summary .price .woocommerce-Price-amount {
+  color: var(--tk-cyan) !important;
+  font-size: clamp(24px, 4vw, 38px) !important;
+}
+
+:root[data-store-platform="tiktok"] .single-product .single_add_to_cart_button {
+  min-height: 52px;
+  padding-inline: 28px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: linear-gradient(90deg, var(--tk-cyan) 0 49%, var(--tk-red) 51% 100%) !important;
+  color: #050608 !important;
+  box-shadow: var(--tk-glow);
+}
+
+:root[data-store-platform="tiktok"] .single-product .quantity .qty,
+:root[data-store-platform="tiktok"] input,
+:root[data-store-platform="tiktok"] select,
+:root[data-store-platform="tiktok"] textarea {
+  border-color: var(--tk-border) !important;
+  background: var(--tk-surface-2) !important;
+  color: var(--tk-text) !important;
+}
+
+/* 购物车页：深色卡片。 */
+:root[data-store-platform="tiktok"] .wc-block-cart,
+:root[data-store-platform="tiktok"] .wp-block-woocommerce-cart {
+  color: var(--tk-text);
+}
+
+:root[data-store-platform="tiktok"] .wc-block-cart__items,
+:root[data-store-platform="tiktok"] .wc-block-cart__totals,
+:root[data-store-platform="tiktok"] .wc-block-cart-item {
+  border-color: var(--tk-border) !important;
+  background: var(--tk-surface) !important;
+  color: var(--tk-text) !important;
+}
+
+:root[data-store-platform="tiktok"] .wc-block-cart__items,
+:root[data-store-platform="tiktok"] .wc-block-cart__totals {
+  border: 1px solid var(--tk-border);
+  border-radius: 18px;
+  box-shadow: var(--tk-glow);
+}
+
+:root[data-store-platform="tiktok"] .wc-block-cart-item__product-name a,
+:root[data-store-platform="tiktok"] .wc-block-cart__totals-title,
+:root[data-store-platform="tiktok"] .wc-block-components-totals-item__label,
+:root[data-store-platform="tiktok"] .wc-block-components-totals-item__value {
+  color: var(--tk-text) !important;
+}
+
+:root[data-store-platform="tiktok"] .wc-block-cart-item__prices,
+:root[data-store-platform="tiktok"] .wc-block-cart-subtotal .wc-block-components-totals-item__value {
+  color: var(--tk-cyan) !important;
+}
+
+:root[data-store-platform="tiktok"] .wc-block-components-quantity-selector {
+  border-color: var(--tk-border) !important;
+  background: var(--tk-surface-2) !important;
+}
+
+:root[data-store-platform="tiktok"] .wc-block-cart__submit-button,
+:root[data-store-platform="tiktok"] .wc-block-components-checkout-button {
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: linear-gradient(90deg, var(--tk-cyan), var(--tk-red)) !important;
+  color: #050608 !important;
+  box-shadow: var(--tk-glow);
+}
+
+/* 结账页：表单仍由 WooCommerce 控制，仅改变视觉。 */
+:root[data-store-platform="tiktok"] .wc-block-checkout,
+:root[data-store-platform="tiktok"] .wp-block-woocommerce-checkout {
+  color: var(--tk-text);
+}
+
+:root[data-store-platform="tiktok"] .wc-block-checkout__main,
+:root[data-store-platform="tiktok"] .wc-block-checkout__sidebar,
+:root[data-store-platform="tiktok"] .wc-block-components-checkout-step,
+:root[data-store-platform="tiktok"] .wc-block-components-order-summary {
+  border-color: var(--tk-border) !important;
+  border-radius: 18px;
+  background: var(--tk-surface) !important;
+  color: var(--tk-text) !important;
+}
+
+:root[data-store-platform="tiktok"] .wc-block-components-checkout-step,
+:root[data-store-platform="tiktok"] .wc-block-components-order-summary {
+  margin-bottom: 12px;
+  padding: 18px;
+  border: 1px solid var(--tk-border) !important;
+}
+
+:root[data-store-platform="tiktok"] .wc-block-components-title,
+:root[data-store-platform="tiktok"] .wc-block-components-checkout-step__heading,
+:root[data-store-platform="tiktok"] .wc-block-components-order-summary-item__description,
+:root[data-store-platform="tiktok"] .wc-block-components-totals-item {
+  color: var(--tk-text) !important;
+}
+
+:root[data-store-platform="tiktok"] .wc-block-components-order-summary .wc-block-components-product-price,
+:root[data-store-platform="tiktok"] .wc-block-checkout__sidebar .wc-block-components-totals-footer-item .wc-block-components-totals-item__value {
+  color: var(--tk-cyan) !important;
+}
+
+:root[data-store-platform="tiktok"] .wc-block-components-text-input input,
+:root[data-store-platform="tiktok"] .wc-block-components-combobox .wc-block-components-combobox-control input {
+  border-color: var(--tk-border) !important;
+  background: var(--tk-surface-2) !important;
+  color: var(--tk-text) !important;
+}
+
+:root[data-store-platform="tiktok"] .mall-contact-panel > a {
+  border-color: var(--tk-cyan);
+  border-radius: 999px;
+  color: var(--tk-cyan) !important;
+}
+
+:root[data-store-platform="tiktok"] footer.wp-block-template-part {
+  border-top: 1px solid var(--tk-border);
+}
+
+@media (max-width: 767px) {
+  :root[data-store-platform="tiktok"] .wp-site-blocks > header,
+  :root[data-store-platform="tiktok"] header.wp-block-template-part {
+    background: #07080b !important;
+  }
+
+  :root[data-store-platform="tiktok"] .mall-storefront {
+    background: var(--tk-bg);
+  }
+
+  :root[data-store-platform="tiktok"] .mall-shop-hero {
+    min-height: 205px;
+    padding: 16px 12px;
+    border-radius: 0;
+  }
+
+  :root[data-store-platform="tiktok"] .mall-shop-tabs,
+  :root[data-store-platform="tiktok"] .mall-campaign-carousel,
+  :root[data-store-platform="tiktok"] .mall-section,
+  :root[data-store-platform="tiktok"] .mall-product-section {
+    border-radius: 0;
+  }
+
+  :root[data-store-platform="tiktok"] .mall-campaign-carousel .shopee-slide {
+    min-height: 285px;
+    padding: 52px 20px 58px;
+  }
+
+  :root[data-store-platform="tiktok"] .mall-campaign-carousel .shopee-slide-title {
+    font-size: 38px !important;
+  }
+
+  :root[data-store-platform="tiktok"] .mall-category-rail a {
+    flex-basis: 82px;
+    padding: 10px 6px;
+  }
+
+  :root[data-store-platform="tiktok"] .mall-product-section ul.products {
+    gap: 4px !important;
+  }
+
+  :root[data-store-platform="tiktok"] .mall-product-section ul.products li.product {
+    border-color: rgba(255, 255, 255, .08);
+    border-radius: 8px !important;
+    background: var(--tk-surface) !important;
+  }
+
+  :root[data-store-platform="tiktok"] .mall-product-section li.product img {
+    aspect-ratio: 4 / 5;
+    border-radius: 7px 7px 0 0 !important;
+  }
+
+  :root[data-store-platform="tiktok"] .mall-product-section li.product .button {
+    border-radius: 999px !important;
+    background: linear-gradient(90deg, var(--tk-cyan), var(--tk-red)) !important;
+    color: #050608 !important;
+  }
+
+  :root[data-store-platform="tiktok"] .mall-mobile-nav {
+    border-top-color: var(--tk-border);
+    background: rgba(8, 9, 12, .96);
+    backdrop-filter: blur(16px);
+  }
+
+  :root[data-store-platform="tiktok"] .mall-mobile-nav a {
+    color: var(--tk-muted) !important;
+  }
+
+  :root[data-store-platform="tiktok"] .mall-mobile-nav a.active {
+    color: var(--tk-cyan) !important;
+    text-shadow: 1px 0 8px rgba(37, 244, 238, .45), -1px 0 8px rgba(254, 44, 85, .35);
+  }
+
+  :root[data-store-platform="tiktok"] .single-product div.product,
+  :root[data-store-platform="tiktok"] .wc-block-cart__items,
+  :root[data-store-platform="tiktok"] .wc-block-cart__totals,
+  :root[data-store-platform="tiktok"] .wc-block-components-checkout-step,
+  :root[data-store-platform="tiktok"] .wc-block-components-order-summary {
+    border-radius: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-store-platform="tiktok"] .tiktok-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

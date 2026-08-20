@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Shopee Admin Panel
- * Description: 店铺装修后台面板：主题色 / 店铺名 / 副标题 / Logo / 功能开关（本地测试）
+ * Description: 店铺装修后台面板：平台模板 / 主题色 / 店铺名 / 副标题 / Logo / 功能开关（本地测试）
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -11,12 +11,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 /* ---------- 默认设置 ---------- */
 function shopee_panel_defaults() {
 	return array(
+		'platform'      => 'shopee', // shopee | tiktok | lazada
 		'theme'         => 'default', // default | minimal | black-gold | green
 		'shop_name'     => '',
 		'shop_tagline'  => '',
 		'logo_id'       => 0,
 		'show_stats'    => 1, // 商品销量/评分
-		'show_switcher' => 1, // 右下角主题切换器
 	);
 }
 
@@ -52,14 +52,13 @@ add_action(
 
 /* ---------- 数据清洗 + 同步 ---------- */
 function shopee_settings_sanitize( $input ) {
-	$defaults = shopee_panel_defaults();
-	$clean    = array(
-		'theme'         => isset( $input['theme'] ) && in_array( $input['theme'], array( 'default', 'minimal', 'black-gold', 'green' ), true ) ? $input['theme'] : 'default',
-		'shop_name'     => isset( $input['shop_name'] ) ? sanitize_text_field( $input['shop_name'] ) : '',
-		'shop_tagline'  => isset( $input['shop_tagline'] ) ? sanitize_text_field( $input['shop_tagline'] ) : '',
-		'logo_id'       => isset( $input['logo_id'] ) ? absint( $input['logo_id'] ) : 0,
-		'show_stats'    => empty( $input['show_stats'] ) ? 0 : 1,
-		'show_switcher' => empty( $input['show_switcher'] ) ? 0 : 1,
+	$clean = array(
+		'platform'     => isset( $input['platform'] ) && in_array( $input['platform'], array( 'shopee', 'tiktok', 'lazada' ), true ) ? $input['platform'] : 'shopee',
+		'theme'        => isset( $input['theme'] ) && in_array( $input['theme'], array( 'default', 'minimal', 'black-gold', 'green' ), true ) ? $input['theme'] : 'default',
+		'shop_name'    => isset( $input['shop_name'] ) ? sanitize_text_field( $input['shop_name'] ) : '',
+		'shop_tagline' => isset( $input['shop_tagline'] ) ? sanitize_text_field( $input['shop_tagline'] ) : '',
+		'logo_id'      => isset( $input['logo_id'] ) ? absint( $input['logo_id'] ) : 0,
+		'show_stats'   => empty( $input['show_stats'] ) ? 0 : 1,
 	);
 	// 同步 logo 到站点图标与站点 logo
 	if ( $clean['logo_id'] ) {
@@ -68,6 +67,92 @@ function shopee_settings_sanitize( $input ) {
 	}
 	return $clean;
 }
+
+/* ---------- Shopee Mall 商品模板应用器 ---------- */
+final class Shopee_Mall_Template_Applier {
+	/**
+	 * 将随插件部署的 Mall 首页模板应用为站点首页。
+	 *
+	 * @return int|WP_Error 首页页面 ID，失败时返回错误对象。
+	 */
+	public static function apply() {
+		$template_file = __DIR__ . '/home-page.html';
+
+		if ( ! is_readable( $template_file ) ) {
+			return new WP_Error( 'mall_template_missing', '找不到商品模板文件。' );
+		}
+
+		$template_content = file_get_contents( $template_file );
+		if ( false === $template_content || false === strpos( $template_content, 'mall-shop-hero' ) ) {
+			return new WP_Error( 'mall_template_invalid', '商品模板文件内容无效。' );
+		}
+
+		$front_page_id = absint( get_option( 'page_on_front' ) );
+		$page_data     = array(
+			'post_title'   => 'หน้าหลัก',
+			'post_content' => $template_content,
+			'post_status'  => 'publish',
+			'post_type'    => 'page',
+		);
+
+		if ( $front_page_id && 'page' === get_post_type( $front_page_id ) ) {
+			$page_data['ID'] = $front_page_id;
+			$result          = wp_update_post( $page_data, true );
+		} else {
+			$result = wp_insert_post( $page_data, true );
+		}
+
+		if ( is_wp_error( $result ) ) {
+			return $result;
+		}
+
+		$front_page_id = (int) $result;
+		$settings      = wp_parse_args( get_option( 'shopee_settings', array() ), shopee_panel_defaults() );
+		$settings      = array_merge(
+			$settings,
+			array(
+				'platform'     => 'shopee',
+				'theme'        => 'default',
+				'shop_name'    => 'เซียงไท่ มอลล์',
+				'shop_tagline' => 'สินค้าคัดสรรคุณภาพ ครบจบในที่เดียว',
+				'show_stats'   => 1,
+			)
+		);
+
+		update_option( 'show_on_front', 'page' );
+		update_option( 'page_on_front', $front_page_id );
+		update_option( 'blogname', 'เซียงไท่ มอลล์' );
+		update_option( 'blogdescription', 'สินค้าคัดสรรคุณภาพ ครบจบในที่เดียว' );
+		update_option( 'WPLANG', 'th' );
+		update_option( 'shopee_settings', $settings );
+
+		return $front_page_id;
+	}
+
+	/**
+	 * 处理后台“应用商品模板”请求。
+	 */
+	public static function handle_request() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( '你没有权限应用商品模板。' );
+		}
+
+		check_admin_referer( 'shopee_apply_mall_template' );
+		$result       = self::apply();
+		$redirect_url = admin_url( 'admin.php?page=shopee-panel' );
+
+		if ( is_wp_error( $result ) ) {
+			$redirect_url = add_query_arg( 'template-error', sanitize_key( $result->get_error_code() ), $redirect_url );
+		} else {
+			$redirect_url = add_query_arg( 'template-applied', '1', $redirect_url );
+		}
+
+		wp_safe_redirect( $redirect_url );
+		exit;
+	}
+}
+
+add_action( 'admin_post_shopee_apply_mall_template', array( 'Shopee_Mall_Template_Applier', 'handle_request' ) );
 
 /* ---------- 渲染面板 ---------- */
 function shopee_panel_render() {
@@ -87,11 +172,28 @@ function shopee_panel_render() {
 		<?php if ( isset( $_GET['settings-updated'] ) ) : // phpcs:ignore ?>
 			<div class="notice notice-success is-dismissible"><p>装修设置已保存！</p></div>
 		<?php endif; ?>
+		<?php if ( isset( $_GET['template-applied'] ) && '1' === sanitize_text_field( wp_unslash( $_GET['template-applied'] ) ) ) : ?>
+			<div class="notice notice-success is-dismissible"><p>商品模板已应用，前台已切换为 Shopee Mall 手机店布局。</p></div>
+		<?php endif; ?>
+		<?php if ( isset( $_GET['template-error'] ) ) : ?>
+			<div class="notice notice-error is-dismissible"><p>商品模板应用失败，请确认模板文件已部署。</p></div>
+		<?php endif; ?>
 
 		<form method="post" action="options.php">
 			<?php settings_fields( 'shopee_settings_group' ); ?>
 			<table class="form-table" role="presentation">
 				<tr>
+					<th scope="row"><label for="shopee-platform">平台模板</label></th>
+					<td>
+						<select name="shopee_settings[platform]" id="shopee-platform" style="min-width:220px;">
+							<option value="shopee" <?php selected( $s['platform'], 'shopee' ); ?>>Shopee</option>
+							<option value="tiktok" <?php selected( $s['platform'], 'tiktok' ); ?>>TikTok</option>
+							<option value="lazada" <?php selected( $s['platform'], 'lazada' ); ?>>Lazada</option>
+						</select>
+						<p class="description">保存后全店统一使用所选平台外观，访客无法自行切换。</p>
+					</td>
+				</tr>
+				<tr id="shopee-theme-row">
 					<th scope="row"><label for="shopee-theme">默认主题色</label></th>
 					<td>
 						<select name="shopee_settings[theme]" id="shopee-theme" style="min-width:220px;">
@@ -99,7 +201,7 @@ function shopee_panel_render() {
 								<option value="<?php echo esc_attr( $key ); ?>" <?php selected( $s['theme'], $key ); ?>><?php echo esc_html( $label ); ?></option>
 							<?php endforeach; ?>
 						</select>
-						<p class="description">前台默认配色。顾客仍可随时用右下角「主题」按钮切换（若开启该功能）。</p>
+						<p class="description">仅用于 Shopee 平台模板。</p>
 					</td>
 				</tr>
 				<tr>
@@ -134,11 +236,6 @@ function shopee_panel_render() {
 							<input type="checkbox" name="shopee_settings[show_stats]" value="1" <?php checked( $s['show_stats'], 1 ); ?>>
 							显示商品销量与评分
 						</label>
-						<br>
-						<label>
-							<input type="checkbox" name="shopee_settings[show_switcher]" value="1" <?php checked( $s['show_switcher'], 1 ); ?>>
-							显示右下角主题切换按钮
-						</label>
 						<p class="description">取消勾选后对应功能立即隐藏。</p>
 					</td>
 				</tr>
@@ -146,11 +243,23 @@ function shopee_panel_render() {
 			<?php submit_button( '保存装修设置' ); ?>
 		</form>
 
+		<div style="max-width:760px;margin:24px 0;padding:20px;background:#fff;border:1px solid #dcdcde;border-left:4px solid #d0011b;box-shadow:0 1px 2px rgba(0,0,0,.04);">
+			<h2 style="margin-top:0;">商品模板</h2>
+			<p><strong>Shopee Mall 手机店模板</strong></p>
+			<p>包含 Mall 红色顶栏、店铺封面、导航、公告、活动轮播、权益卡、圆形分类、双列商品流和手机底部导航。点击后会同时应用泰语店名、泰语首页和默认配色。</p>
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+				<input type="hidden" name="action" value="shopee_apply_mall_template">
+				<?php wp_nonce_field( 'shopee_apply_mall_template' ); ?>
+				<?php submit_button( '应用商品模板', 'primary', 'submit', false ); ?>
+				<a class="button" href="<?php echo esc_url( home_url( '/' ) ); ?>" target="_blank" rel="noopener noreferrer">预览当前首页</a>
+			</form>
+		</div>
+
 		<hr>
 		<h2>当前装修信息</h2>
 		<table class="widefat striped" style="max-width:560px;">
-			<tr><th>模板版本</th><td>Shopee 装修模板 v1.0.4（前台 4 套主题 + 购物车 + 后台橙色）</td></tr>
-			<tr><th>前台样式文件</th><td>wp-content/mu-plugins/shopee-style.css</td></tr>
+			<tr><th>模板版本</th><td>平台模板 v1.3.0（Shopee + TikTok + Lazada）</td></tr>
+			<tr><th>前台样式文件</th><td>shopee-style.css / tiktok-style.css / lazada-style.css</td></tr>
 			<tr><th>后台样式文件</th><td>wp-content/mu-plugins/admin-branding.php</td></tr>
 			<tr><th>模板包备份</th><td>local-docker/template-pack/（含部署说明 README）</td></tr>
 		</table>
@@ -159,6 +268,12 @@ function shopee_panel_render() {
 	<script>
 	jQuery( function ( $ ) {
 		var frame;
+		function toggleShopeeThemes() {
+			$( '#shopee-theme-row' ).toggle( 'shopee' === $( '#shopee-platform' ).val() );
+		}
+		$( '#shopee-platform' ).on( 'change', toggleShopeeThemes );
+		toggleShopeeThemes();
+
 		$( '#shopee-logo-upload' ).on( 'click', function ( e ) {
 			e.preventDefault();
 			if ( frame ) { frame.open(); return; }
