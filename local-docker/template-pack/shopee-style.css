@@ -1653,3 +1653,159 @@ a {
 		min-width: 0;
 	}
 }
+
+/* ============================================
+   移动端：商店页 blocks 商品网格（Product Collection）
+   ============================================ */
+
+@media (max-width: 767px) {
+	/* 网格容器：2 列铺满 */
+	ul.wc-block-product-template,
+	ul.wc-block-grid__products {
+		display: grid !important;
+		grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+		gap: 8px !important;
+		margin: 0 !important;
+		padding: 0 8px 8px !important;
+		list-style: none !important;
+	}
+
+	/* 卡片：flex 纵向，统一高度，底部对齐 */
+	li.wc-block-product {
+		display: flex !important;
+		flex-direction: column !important;
+		width: auto !important;
+		min-width: 0;
+		height: auto !important;
+		margin: 0 !important;
+		padding: 0 !important;
+		border-radius: 4px !important;
+		overflow: hidden;
+		background: #fff !important;
+		box-shadow: 0 1px 4px rgba(0, 0, 0, .11) !important;
+	}
+	li.wc-block-product:hover {
+		transform: none;
+		box-shadow: 0 1px 4px rgba(0, 0, 0, .11) !important;
+	}
+
+	/* 图片：正方形、铺满卡片宽 */
+	li.wc-block-product .wc-block-components-product-image,
+	li.wc-block-product .wc-block-components-product-image__inner-container {
+		margin: 0 !important;
+		width: 100% !important;
+	}
+	li.wc-block-product .wc-block-components-product-image img {
+		width: 100% !important;
+		height: auto !important;
+		aspect-ratio: 1;
+		object-fit: cover;
+		display: block;
+		border-radius: 0 !important;
+	}
+
+	/* 标题：两行截断，统一占位 */
+	li.wc-block-product .wp-block-post-title {
+		margin: 0 !important;
+		padding: 8px 8px 2px !important;
+		font-size: 12px !important;
+		line-height: 1.35 !important;
+		text-align: left !important;
+	}
+	li.wc-block-product .wp-block-post-title a {
+		font-size: 12px !important;
+		line-height: 1.35 !important;
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+		overflow: hidden;
+		min-height: 32px;
+		text-decoration: none !important;
+	}
+
+	/* 价格：统一样式 */
+	li.wc-block-product .wc-block-components-product-price,
+	li.wc-block-product .wc-block-grid__product-price {
+		margin: 0 !important;
+		padding: 2px 8px 4px !important;
+	}
+	li.wc-block-product .wc-block-components-product-price__value {
+		font-size: 14px !important;
+	}
+	li.wc-block-product .wc-block-components-product-price__regular {
+		font-size: 11px !important;
+	}
+
+	/* 按钮：底部对齐、全宽 */
+	li.wc-block-product .wp-block-button {
+		margin-top: auto !important;
+		padding: 0 8px 8px !important;
+	}
+	li.wc-block-product .wp-block-button .wp-block-button__link,
+	li.wc-block-product .add_to_cart_button {
+		width: 100%;
+		padding: 7px !important;
+		font-size: 11px !important;
+		text-align: center;
+		border-radius: 2px !important;
+	}
+}
+
+/* ============================================
+   移动端：商店页 blocks 卡片对齐修正（精确类名）
+   ============================================ */
+
+@media (max-width: 767px) {
+	/* 标题：强制左对齐、两行截断 */
+	li.wc-block-product .wp-block-post-title {
+		text-align: left !important;
+		margin: 0 !important;
+		padding: 8px 8px 2px !important;
+	}
+	li.wc-block-product .wp-block-post-title a {
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+		overflow: hidden;
+		min-height: 32px;
+	}
+
+	/* 价格：左对齐，统一占位 */
+	li.wc-block-product .wp-block-woocommerce-product-price {
+		text-align: left !important;
+		margin: 0 !important;
+		padding: 2px 8px 4px !important;
+	}
+	li.wc-block-product .wp-block-woocommerce-product-price .price,
+	li.wc-block-product .wc-block-components-product-price {
+		margin: 0 !important;
+	}
+	li.wc-block-product .wc-block-components-product-price__value {
+		font-size: 14px !important;
+		color: var(--sp-primary, #ee4d2d) !important;
+	}
+	li.wc-block-product .wc-block-components-product-price__regular {
+		font-size: 11px !important;
+		color: #999 !important;
+	}
+
+	/* 按钮：全宽、底部对齐 */
+	li.wc-block-product .wp-block-woocommerce-product-button {
+		margin-top: auto !important;
+		padding: 0 8px 8px !important;
+		text-align: center !important;
+	}
+	li.wc-block-product .wp-block-woocommerce-product-button .wp-block-button__link,
+	li.wc-block-product .wc-block-components-product-button .wp-block-button__link,
+	li.wc-block-product .add_to_cart_button {
+		display: block;
+		width: 100%;
+		margin: 0 !important;
+		padding: 8px 4px !important;
+		font-size: 12px !important;
+		text-align: center;
+		border-radius: 2px !important;
+		background: var(--sp-primary, #ee4d2d) !important;
+		color: #fff !important;
+	}
+}
