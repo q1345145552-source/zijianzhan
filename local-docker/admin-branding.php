@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Admin Branding
- * Description: 后台品牌定制：Shopee 橙主题 + 优选商城 logo（登录页/菜单）+ 去 WooCommerce logo + 交互增强（本地测试）
+ * Description: 后台品牌定制：Shopee 橙主题 + 湘泰商城 logo（登录页/菜单）+ 去 WooCommerce logo + 交互增强（本地测试）
  */
 
 /* ========== 1. 后台主题色 + 交互样式 + 品牌 logo ========== */
@@ -208,7 +208,7 @@ add_action(
 add_action(
 	'admin_footer',
 	function () {
-		$shop_name = function_exists( 'shopee_get_settings' ) && ! empty( shopee_get_settings()['shop_name'] ) ? shopee_get_settings()['shop_name'] : '优选商城';
+		$shop_name = function_exists( 'shopee_get_settings' ) && ! empty( shopee_get_settings()['shop_name'] ) ? shopee_get_settings()['shop_name'] : '湘泰商城';
 		$shop_name = esc_js( $shop_name );
 		echo '<script>
 (function () {

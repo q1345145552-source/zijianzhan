@@ -4,6 +4,15 @@
  * Description: 加载 Shopee 泰国站风格定制样式与脚本；读取「店铺装修面板」设置（本地测试）
  */
 
+/* ---------- 移除 WooCommerce 生成器标签 ---------- */
+add_action(
+	'plugins_loaded',
+	function () {
+		remove_filter( 'get_the_generator_html', 'wc_generator_tag', 10 );
+		remove_filter( 'get_the_generator_xhtml', 'wc_generator_tag', 10 );
+	}
+);
+
 /* ---------- 加载样式与脚本 ---------- */
 add_action(
 	'wp_enqueue_scripts',

@@ -21,7 +21,7 @@
 			<!-- wp:group {"layout":{"type":"flex","flexWrap":"nowrap"}} -->
 			<div class="wp-block-group">
 				<!-- wp:image {"id":44,"sizeSlug":"full","linkDestination":"none","className":"shopee-header-logo"} -->
-				<figure class="wp-block-image size-full shopee-header-logo"><img src="http://localhost:8080/wp-content/uploads/2026/08/4.png" alt="优选商城 Logo" class="wp-image-44"/></figure>
+				<figure class="wp-block-image size-full shopee-header-logo"><img src="http://localhost:8080/wp-content/uploads/2026/08/4.png" alt="湘泰商城 Logo" class="wp-image-44"/></figure>
 				<!-- /wp:image -->
 				<!-- wp:site-title {"level":0} /-->
 			</div>

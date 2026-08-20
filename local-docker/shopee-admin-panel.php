@@ -105,7 +105,7 @@ function shopee_panel_render() {
 				<tr>
 					<th scope="row"><label for="shopee-name">店铺名称</label></th>
 					<td>
-						<input type="text" name="shopee_settings[shop_name]" id="shopee-name" class="regular-text" value="<?php echo esc_attr( $s['shop_name'] ); ?>" placeholder="优选商城">
+						<input type="text" name="shopee_settings[shop_name]" id="shopee-name" class="regular-text" value="<?php echo esc_attr( $s['shop_name'] ); ?>" placeholder="湘泰商城">
 						<p class="description">显示在网站顶部和浏览器标题。留空则用 WordPress 站点名称。</p>
 					</td>
 				</tr>
